@@ -1,0 +1,174 @@
+====================================================================
+GUIA DE PETICIONES HTTP (CURL Y POSTMAN)
+====================================================================
+
+Servidor Local: http://localhost:8000
+Servidor VM:    http://192.168.56.20:8000
+
+
+====================================================================
+1. PROPIETARIOS
+====================================================================
+
+1.1 CREAR PROPIETARIO
+--------------------------------------------------------------------
+Metodo: POST
+URL:    http://localhost:8000/propietarios
+
+Body (JSON):
+{
+  "nombre": "Nicolas",
+  "telefono": "3046562512",
+  "email": "samnic1524@gmail.com"
+}
+
+cURL:
+curl -X POST "http://localhost:8000/propietarios" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Nicolas",
+    "telefono": "3046562512",
+    "email": "samnic1524@gmail.com"
+  }'
+
+
+1.2 LISTAR TODOS LOS PROPIETARIOS
+--------------------------------------------------------------------
+Metodo: GET
+URL:    http://localhost:8000/propietarios
+
+cURL:
+curl -X GET "http://localhost:8000/propietarios"
+
+
+1.3 CONSULTAR UN PROPIETARIO POR ID
+--------------------------------------------------------------------
+Metodo: GET
+URL:    http://localhost:8000/propietarios/1
+
+Nota: Cambiar el "1" por el ID del propietario deseado.
+
+cURL:
+curl -X GET "http://localhost:8000/propietarios/1"
+
+
+1.4 ACTUALIZAR PROPIETARIO
+--------------------------------------------------------------------
+Metodo: PUT
+URL:    http://localhost:8000/propietarios/1
+
+Body (JSON):
+{
+  "nombre": "Nicolas Actualizado",
+  "telefono": "3046562512",
+  "email": "samnic1524@gmail.com"
+}
+
+cURL:
+curl -X PUT "http://localhost:8000/propietarios/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Nicolas Actualizado",
+    "telefono": "3046562512",
+    "email": "samnic1524@gmail.com"
+  }'
+
+
+1.5 ELIMINAR PROPIETARIO
+--------------------------------------------------------------------
+Metodo: DELETE
+URL:    http://localhost:8000/propietarios/1
+
+Nota: Al eliminar un propietario, se eliminan automaticamente todas
+sus mascotas asociadas (eliminacion en cascada).
+
+cURL:
+curl -X DELETE "http://localhost:8000/propietarios/1"
+
+
+
+====================================================================
+2. MASCOTAS
+====================================================================
+
+2.1 CREAR MASCOTA
+--------------------------------------------------------------------
+Metodo: POST
+URL:    http://localhost:8000/mascotas
+
+Nota: La mascota se asocia al propietario mediante "propietario_id".
+
+Body (JSON):
+{
+  "nombre": "Marley",
+  "especie": "Perro",
+  "raza": "Golden Retriever",
+  "edad": 1,
+  "propietario_id": 1
+}
+
+cURL:
+curl -X POST "http://localhost:8000/mascotas" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Marley",
+    "especie": "Perro",
+    "raza": "Golden Retriever",
+    "edad": 1,
+    "propietario_id": 1
+  }'
+
+
+2.2 LISTAR TODAS LAS MASCOTAS
+--------------------------------------------------------------------
+Metodo: GET
+URL:    http://localhost:8000/mascotas
+
+cURL:
+curl -X GET "http://localhost:8000/mascotas"
+
+
+2.3 CONSULTAR UNA MASCOTA POR ID
+--------------------------------------------------------------------
+Metodo: GET
+URL:    http://localhost:8000/mascotas/1
+
+Nota: Cambiar el "1" por el ID de la mascota deseada.
+
+cURL:
+curl -X GET "http://localhost:8000/mascotas/1"
+
+
+2.4 ACTUALIZAR MASCOTA
+--------------------------------------------------------------------
+Metodo: PUT
+URL:    http://localhost:8000/mascotas/1
+
+Body (JSON):
+{
+  "nombre": "Marley",
+  "especie": "Perro",
+  "raza": "Golden Retriever",
+  "edad": 2,
+  "propietario_id": 1
+}
+
+cURL:
+curl -X PUT "http://localhost:8000/mascotas/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Marley",
+    "especie": "Perro",
+    "raza": "Golden Retriever",
+    "edad": 2,
+    "propietario_id": 1
+  }'
+
+
+2.5 ELIMINAR MASCOTA
+--------------------------------------------------------------------
+Metodo: DELETE
+URL:    http://localhost:8000/mascotas/1
+
+cURL:
+curl -X DELETE "http://localhost:8000/mascotas/1"

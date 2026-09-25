@@ -17,7 +17,7 @@ app = FastAPI(
     description="Proyecto de mitad de curso para gestionar mascotas y propietarios"
 )
 
-# Permitir comunicación con el frontend
+# Permitir comunicación con el frontend sin seguridad por ahora
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
