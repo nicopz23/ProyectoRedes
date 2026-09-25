@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.database import inicializar_base_datos
-from backend.routes import propietarios
+from backend.routes import propietarios, mascotas
 
 # Creamos la aplicación FastAPI
 app = FastAPI(
@@ -21,8 +21,9 @@ app.add_middleware(
 # Al arrancar, creamos las tablas en SQLite si no existen
 inicializar_base_datos()
 
-# Registramos las rutas de propietarios
+# Registramos las rutas de la API
 app.include_router(propietarios.router)
+app.include_router(mascotas.router)
 
 # Endpoint raíz
 @app.get("/")
