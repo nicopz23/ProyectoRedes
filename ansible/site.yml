@@ -1,0 +1,23 @@
+---
+- name: Automatizar configuracion del servidor
+  hosts: servidor
+  become: true
+
+  tasks:
+    - name: Actualizar repositorios del sistema
+      apt:
+        update_cache: yes
+
+    - name: Instalar Python y SQLite
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - sqlite3
+        state: present
+
+    - name: Instalar librerias de requirements.txt
+      pip:
+        requirements: /vagrant/requirements.txt
+        extra_args: --break-system-packages
