@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Manager - Sistema de Gestión de Mascotas</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Encabezado simple -->
+    <header>
+        <div class="container">
+            <h1>🐾 PET MANAGER</h1>
+            <nav>
+                <a href="/" class="active">Inicio</a>
+                <a href="/mascotas.html">Mascotas</a>
+                <a href="/propietarios.html">Propietarios</a>
+                <a href="/docs" target="_blank">Documentación API (/docs)</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="container">
+        <div class="panel-inicio">
+            <h2>Bienvenido a Pet Manager</h2>
+            <p>Sistema sencillo para gestionar mascotas y sus propietarios.</p>
+
+            <!-- Botones de acceso principales -->
+            <div class="botones-inicio">
+                <a href="/mascotas.html" class="btn btn-primary">[ Mascotas ]</a>
+                <a href="/propietarios.html" class="btn btn-primary">[ Propietarios ]</a>
+            </div>
+
+            <!-- Resumen de información del proyecto -->
+            <div class="caja-info">
+                <strong>Información del Sistema:</strong>
+                <ul>
+                    <li><strong>Backend:</strong> Python con FastAPI</li>
+                    <li><strong>Base de datos:</strong> SQLite con relación 1 a N</li>
+                    <li><strong>Virtualización:</strong> Ubuntu Server en Vagrant y VirtualBox</li>
+                    <li><strong>Frontend:</strong> HTML, CSS y JavaScript</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pie de página -->
+    <footer>
+        <p>Proyecto de Mitad de Curso - Redes y Servicios</p>
+    </footer>
+
+</body>
+</html>

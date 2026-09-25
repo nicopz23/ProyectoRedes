@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propietarios - Pet Manager</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Encabezado simple -->
+    <header>
+        <div class="container">
+            <h1>🐾 PET MANAGER</h1>
+            <nav>
+                <a href="/">Inicio</a>
+                <a href="/mascotas.html">Mascotas</a>
+                <a href="/propietarios.html" class="active">Propietarios</a>
+                <a href="/docs" target="_blank">Documentación API (/docs)</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="container">
+        <!-- Barra de título y botón nuevo -->
+        <div class="encabezado-seccion">
+            <h2>PROPIETARIOS</h2>
+            <button id="btnNuevoPropietario" class="btn btn-primary">+ Nuevo</button>
+        </div>
+
+        <!-- Alerta de mensajes -->
+        <div id="mensajeAlerta" class="alerta"></div>
+
+        <!-- Lista donde se mostrarán los propietarios -->
+        <div id="listaPropietarios">
+            <p>Cargando propietarios...</p>
+        </div>
+    </main>
+
+    <!-- Modal para Agregar / Editar Propietario -->
+    <div id="modalPropietario" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3 id="modalTitulo">Registrar Propietario</h3>
+                <span id="btnCerrarModal" class="cerrar">&times;</span>
+            </div>
+
+            <form id="formularioPropietario">
+                <input type="hidden" id="propietarioId">
+
+                <div class="campo">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" required placeholder="Ej: Nicolas Paz">
+                </div>
+
+                <div class="campo">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="text" id="telefono" placeholder="Ej: 3000000000">
+                </div>
+
+                <div class="campo">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" placeholder="Ej: nicolas@example.com">
+                </div>
+
+                <div class="modal-acciones">
+                    <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer>
+        <p>Proyecto de Mitad de Curso - Redes y Servicios</p>
+    </footer>
+
+    <!-- Script de lógica que se activará en la Fase 7 -->
+    <script src="/js/propietarios.js"></script>
+</body>
+</html>

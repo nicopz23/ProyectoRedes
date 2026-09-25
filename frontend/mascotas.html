@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mascotas - Pet Manager</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Encabezado simple -->
+    <header>
+        <div class="container">
+            <h1>🐾 PET MANAGER</h1>
+            <nav>
+                <a href="/">Inicio</a>
+                <a href="/mascotas.html" class="active">Mascotas</a>
+                <a href="/propietarios.html">Propietarios</a>
+                <a href="/docs" target="_blank">Documentación API (/docs)</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="container">
+        <!-- Barra de título y botón nuevo -->
+        <div class="encabezado-seccion">
+            <h2>MASCOTAS</h2>
+            <button id="btnNuevaMascota" class="btn btn-primary">+ Nueva</button>
+        </div>
+
+        <!-- Alerta de mensajes -->
+        <div id="mensajeAlerta" class="alerta"></div>
+
+        <!-- Lista donde se mostrarán las tarjetas de mascotas -->
+        <div id="listaMascotas">
+            <p>Cargando mascotas...</p>
+        </div>
+    </main>
+
+    <!-- Modal para Agregar / Editar Mascota -->
+    <div id="modalMascota" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3 id="modalTitulo">Registrar Mascota</h3>
+                <span id="btnCerrarModal" class="cerrar">&times;</span>
+            </div>
+
+            <form id="formularioMascota">
+                <input type="hidden" id="mascotaId">
+
+                <div class="campo">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" required placeholder="Ej: Max">
+                </div>
+
+                <div class="campo">
+                    <label for="especie">Especie:</label>
+                    <select id="especie" required>
+                        <option value="">-- Seleccione una especie --</option>
+                        <option value="Perro">Perro</option>
+                        <option value="Gato">Gato</option>
+                        <option value="Ave">Ave</option>
+                        <option value="Conejo">Conejo</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="raza">Raza:</label>
+                    <input type="text" id="raza" placeholder="Ej: Labrador">
+                </div>
+
+                <div class="campo">
+                    <label for="edad">Edad (años):</label>
+                    <input type="number" id="edad" min="0" placeholder="Ej: 3">
+                </div>
+
+                <div class="campo">
+                    <label for="propietarioId">Propietario:</label>
+                    <select id="propietarioId" required>
+                        <option value="">Cargando propietarios...</option>
+                    </select>
+                </div>
+
+                <div class="modal-acciones">
+                    <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer>
+        <p>Proyecto de Mitad de Curso - Redes y Servicios</p>
+    </footer>
+
+    <!-- Script de lógica que se activará en la Fase 7 -->
+    <script src="/js/mascotas.js"></script>
+</body>
+</html>
