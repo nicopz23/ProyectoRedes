@@ -1,43 +1,101 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-Vagrant.configure("2") do |config|
+# Despliegue en 2 Servidores (Frontend y Backend) con dominio petmanager.local
+# Proyecto de Curso – 1ª parte | Redes e Infraestructura 2026-09
 
+Vagrant.configure("2") do |config|
   config.vm.box = "bento/ubuntu-22.04"
 
-  # IP Privada fija
-  config.vm.network "private_network", ip: "192.168.56.20"
+  # ==========================================
+  # SERVIDOR 1: FRONTEND (Nginx Web Server)
+  # ==========================================
+  config.vm.define "front" do |front|
+    front.vm.hostname = "front.petmanager.local"
+    front.vm.network "private_network", ip: "192.168.56.10"
+    front.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
+    front.vm.synced_folder ".", "/vagrant"
 
-  # Port Forwarding para SSH y FastAPI
-  config.vm.network "forwarded_port", guest: 22, host: 2222, host_ip: "0.0.0.0", id: "ssh", auto_correct: true
-  config.vm.network "forwarded_port", guest: 8000, host: 8000, auto_correct: true
+    front.vm.provider "virtualbox" do |vb|
+      vb.name = "UbuntuServer-Front"
+      vb.memory = 1024
+      vb.cpus = 1
+      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    end
 
-  # Sincronización de carpetas
-  config.vm.synced_folder ".", "/vagrant"
+    front.vm.provision "shell", inline: <<-SHELL
+      set -e
+      echo "=== [FRONT] Instalando y configurando Nginx ==="
+      apt-get update -y
+      apt-get install -y nginx
 
-  # Configuración para VirtualBox
-  config.vm.provider "virtualbox" do |vb|
-    vb.name = "UbuntuServer-Mascotas"
-    vb.memory = 2048
-    vb.cpus = 2
-    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      echo "=== [FRONT] Configurando VirtualHost con dominio petmanager.local ==="
+      cat << 'EOF' > /etc/nginx/sites-available/petmanager
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name petmanager.local www.petmanager.local 192.168.56.10;
+
+    # Archivos estáticos del frontend
+    root /vagrant/frontend;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Proxy inverso hacia el Servidor de Backend (192.168.56.20:8000)
+    location ~ ^/(auth|admin|dashboard|mascotas|propietarios|docs|openapi.json) {
+        proxy_pass http://192.168.56.20:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+      rm -f /etc/nginx/sites-enabled/default
+      ln -sf /etc/nginx/sites-available/petmanager /etc/nginx/sites-enabled/
+      systemctl restart nginx
+      systemctl enable nginx
+
+      echo "=== [FRONT] Servidor Web Nginx activo en http://192.168.56.10 (petmanager.local) ==="
+    SHELL
   end
 
-  # Aprovisionamiento: instala paquetes y levanta el servicio con systemd
-  config.vm.provision "shell", inline: <<-SHELL
-    set -e
-    echo "Actualizando paquetes e instalando Python y SQLite..."
-    apt-get update -y
-    apt-get install -y python3 python3-pip python3-venv sqlite3
+  # ==========================================
+  # SERVIDOR 2: BACKEND (FastAPI / Uvicorn API REST)
+  # ==========================================
+  config.vm.define "back" do |back|
+    back.vm.hostname = "back.petmanager.local"
+    back.vm.network "private_network", ip: "192.168.56.20"
+    back.vm.network "forwarded_port", guest: 8000, host: 8000, auto_correct: true
+    back.vm.synced_folder ".", "/vagrant"
 
-    echo "Creando entorno virtual e instalando dependencias..."
-    python3 -m venv /home/vagrant/venv
-    /home/vagrant/venv/bin/pip install -r /vagrant/requirements.txt
+    back.vm.provider "virtualbox" do |vb|
+      vb.name = "UbuntuServer-Back"
+      vb.memory = 1536
+      vb.cpus = 1
+      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    end
 
-    echo "Creando servicio systemd..."
-    cat << 'EOF' > /etc/systemd/system/gestion-mascotas.service
+    back.vm.provision "shell", inline: <<-SHELL
+      set -e
+      echo "=== [BACK] Instalando Python, pip y SQLite ==="
+      apt-get update -y
+      apt-get install -y python3 python3-pip python3-venv sqlite3
+
+      echo "=== [BACK] Creando entorno virtual e instalando dependencias ==="
+      python3 -m venv /home/vagrant/venv
+      /home/vagrant/venv/bin/pip install --upgrade pip
+      /home/vagrant/venv/bin/pip install -r /vagrant/requirements.txt
+
+      echo "=== [BACK] Configurando servicio systemd para la API REST ==="
+      cat << 'EOF' > /etc/systemd/system/gestion-mascotas.service
 [Unit]
-Description=Servicio Gestion de Mascotas
+Description=Servicio API REST Gestion de Mascotas y Censo
 After=network.target
 
 [Service]
@@ -50,10 +108,11 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-    systemctl daemon-reload
-    systemctl enable --now gestion-mascotas.service
+      systemctl daemon-reload
+      systemctl enable --now gestion-mascotas.service
 
-    echo "Aplicacion iniciada exitosamente en el puerto 8000."
-  SHELL
+      echo "=== [BACK] API REST iniciada en http://192.168.56.20:8000 ==="
+    SHELL
+  end
 
 end
