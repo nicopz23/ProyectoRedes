@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Manager - Dashboard de Censo y Estadísticas</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Encabezado con navegación -->
+    <header>
+        <div class="container">
+            <div class="brand-wrapper">
+                <h1><a href="/">PET MANAGER</a></h1>
+                <span id="badgeRol" class="indicador-rol badge badge-ciudadano">...</span>
+            </div>
+            <nav class="nav-links">
+                <a href="/">Inicio</a>
+                <a href="/dashboard.html" class="active">Dashboard</a>
+                <a href="/mascotas.html">Mascotas</a>
+                <a href="/propietarios.html">Propietarios</a>
+                <a href="/docs" target="_blank">API Docs</a>
+                <button id="btnCambiarPin" class="btn btn-outline" style="display: none; font-size: 0.82rem;">🔑 Cambiar PIN</button>
+                <button id="btnCerrarSesion" class="btn btn-outline" style="font-size: 0.82rem;">🚪 Cerrar Sesión</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Encabezado de sección -->
+        <div class="encabezado-seccion">
+            <div>
+                <h2>Dashboard de Censo y Salud Animal</h2>
+                <div class="subtitulo">Indicadores consolidados y análisis estadístico en tiempo real</div>
+            </div>
+            <div>
+                <button id="btnRefrescar" class="btn btn-primary">🔄 Actualizar</button>
+                <button id="btnRestablecerDataset" class="btn btn-secondary solo-admin" style="display: none;" title="Solo Administrador">📥 Restablecer Datos</button>
+            </div>
+        </div>
+
+        <div id="mensajeAlerta" class="alerta"></div>
+
+        <!-- Indicadores Clave de Desempeño (KPIs) -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <span class="kpi-label">Mascotas</span>
+                <span class="kpi-value" id="kpiTotalMascotas">--</span>
+                <span class="kpi-subtext">Total registradas</span>
+            </div>
+            <div class="kpi-card kpi-secondary">
+                <span class="kpi-label">Tutores / Hogares</span>
+                <span class="kpi-value" id="kpiTotalPropietarios">--</span>
+                <span class="kpi-subtext">Hogares asociados</span>
+            </div>
+            <div class="kpi-card kpi-warning">
+                <span class="kpi-label">Edad Promedio</span>
+                <span class="kpi-value" id="kpiEdadPromedio">--</span>
+                <span class="kpi-subtext">Años de vida promedio</span>
+            </div>
+            <div class="kpi-card kpi-success">
+                <span class="kpi-label">Cobertura de Vacunación</span>
+                <span class="kpi-value" id="kpiVacunacion">--</span>
+                <span class="kpi-subtext" id="kpiVacunacionDetalle">-- de -- vacunados</span>
+            </div>
+        </section>
+
+        <!-- Rejilla de Gráficos Interactivos -->
+        <section class="charts-grid">
+            <div class="chart-card">
+                <h3>Distribución por Especie</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartEspecies"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Distribución por Grupos de Edad</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartEdades"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Estado de Vacunación</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartVacunacion"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Razas Registradas</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartRazas"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Pet Manager © 2026-09 | Redes e Infraestructura</p>
+    </footer>
+
+    <script src="/js/roles.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+
+</html>
