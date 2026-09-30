@@ -1,0 +1,51 @@
+nombre_mascota,especie,raza,edad,sexo,vacunado,propietario_nombre,propietario_telefono,propietario_email,propietario_password
+Max,Perro,Labrador,4,Macho,1,Carlos Gomez,3001234567,carlos.gomez@email.com,123456
+Luna,Gato,Siames,2,Hembra,1,Maria Rodriguez,3012345678,maria.rod@email.com,123456
+Rocky,Perro,Pastor Aleman,5,Macho,1,Andres Perez,3023456789,andres.p@email.com,123456
+Mimi,Gato,Persa,3,Hembra,0,Laura Torres,3034567890,laura.t@email.com,123456
+Toby,Perro,Golden Retriever,1,Macho,1,Juan Martinez,3045678901,juan.m@email.com,123456
+Bella,Perro,Poodle,6,Hembra,1,Sofia Ramirez,3056789012,sofia.r@email.com,123456
+Simba,Gato,Comun Europeo,2,Macho,1,Diego Hernandez,3067890123,diego.h@email.com,123456
+Coco,Ave,Perico Australiano,1,Macho,0,Valentina Castro,3078901234,valen.c@email.com,123456
+Zeus,Perro,Rottweiler,7,Macho,1,Felipe Morales,3089012345,felipe.m@email.com,123456
+Nala,Gato,Bengala,4,Hembra,1,Camila Sanchez,3090123456,camila.s@email.com,123456
+Thor,Perro,Bulldog Frances,3,Macho,1,Mateo Vargas,3101234567,mateo.v@email.com,123456
+Kira,Perro,Husky Siberiano,2,Hembra,0,Daniela Rios,3112345678,daniela.r@email.com,123456
+Oliver,Gato,Maine Coon,5,Macho,1,Sebastian Diaz,3123456789,sebas.d@email.com,123456
+Lola,Perro,Chihuahua,8,Hembra,1,Paula Ortiz,3134567890,paula.o@email.com,123456
+Bobi,Perro,Beagle,3,Macho,1,Alejandro Ruiz,3145678901,alejandro.r@email.com,123456
+Cleo,Gato,Angora,4,Hembra,1,Natalia Silva,3156789012,natalia.s@email.com,123456
+Bruno,Perro,Boxer,6,Macho,1,Gabriel Mendoza,3167890123,gabriel.m@email.com,123456
+Pelusa,Conejo,Belier,2,Hembra,0,Isabella Rojas,3178901234,isabella.r@email.com,123456
+Jack,Perro,Jack Russell,4,Macho,1,Samuel Guzman,3189012345,samuel.g@email.com,123456
+Maya,Gato,Ragdoll,1,Hembra,1,Mariana Moreno,3190123456,mariana.m@email.com,123456
+Sam,Perro,Border Collie,3,Macho,1,Nicolas Romero,3201234567,nicolas.r@email.com,123456
+Mia,Gato,Sphynx,2,Hembra,1,Carolina Munoz,3212345678,carolina.m@email.com,123456
+Lucas,Perro,Dalmata,5,Macho,0,Julian Alvarez,3223456789,julian.a@email.com,123456
+Princesa,Perro,Maltes,9,Hembra,1,Elena Cardona,3234567890,elena.c@email.com,123456
+Leo,Gato,Azul Ruso,3,Macho,1,Lucas Herrera,3245678901,lucas.h@email.com,123456
+Chiqui,Perro,Pinscher,7,Hembra,1,Manuela Gil,3256789012,manuela.g@email.com,123456
+Pancho,Ave,Loro Cabeza Amarilla,4,Macho,0,Ricardo Rios,3267890123,ricardo.r@email.com,123456
+Sasha,Perro,Criollo / Mestizo,4,Hembra,1,Juliana Soto,3278901234,juliana.s@email.com,123456
+Chester,Gato,Criollo / Mestizo,3,Macho,1,Santiago Pardo,3289012345,santiago.p@email.com,123456
+Apolo,Perro,Doberman,5,Macho,1,David Quintero,3290123456,david.q@email.com,123456
+Frida,Perro,Criollo / Mestizo,2,Hembra,1,Sara Velasquez,3301234567,sara.v@email.com,123456
+Gatsby,Gato,Britanico de Pelo Corto,6,Macho,1,Tomas Londono,3312345678,tomas.l@email.com,123456
+Tambor,Conejo,Cabeza de Leon,1,Macho,0,Valeria Mejia,3323456789,valeria.m@email.com,123456
+Dakota,Perro,Golden Retriever,3,Hembra,1,Esteban Correa,3334567890,esteban.c@email.com,123456
+Oreo,Gato,Blanco y Negro,2,Macho,1,Catalina Montoya,3345678901,cata.m@email.com,123456
+Rex,Perro,Pastor Aleman,8,Macho,1,Victor Bedoya,3356789012,victor.b@email.com,123456
+Canela,Perro,Cocker Spaniel,5,Hembra,1,Alicia Henao,3367890123,alicia.h@email.com,123456
+Felix,Gato,Criollo / Mestizo,4,Macho,0,Martin Cano,3378901234,martin.c@email.com,123456
+Niebla,Gato,Persa,3,Hembra,1,Lucia Osorio,3389012345,lucia.o@email.com,123456
+Bimba,Perro,Pug,4,Hembra,1,Pablo Gallego,3390123456,pablo.g@email.com,123456
+Kaiser,Perro,Rottweiler,6,Macho,1,Oscar Castano,3401234567,oscar.c@email.com,123456
+Tom,Gato,Siames,1,Macho,1,Susana Gaviria,3412345678,susana.g@email.com,123456
+Zeus II,Perro,Pitbull Terrier,3,Macho,0,Camilo Botero,3423456789,camilo.b@email.com,123456
+Kyra,Perro,Akita Inu,4,Hembra,1,Angela Arango,3434567890,angela.a@email.com,123456
+Garfield,Gato,Atigrado Naranja,7,Macho,1,Javier Villegas,3445678901,javier.v@email.com,123456
+Kiwi,Ave,Canario,2,Macho,0,Adriana Uribe,3456789012,adriana.u@email.com,123456
+Tango,Perro,Schnauzer,5,Macho,1,Fernando Restrepo,3467890123,fernando.r@email.com,123456
+Sandy,Perro,Labrador,2,Hembra,1,Monica Jaramillo,3478901234,monica.j@email.com,123456
+Salem,Gato,Negro Comun,3,Macho,1,Guillermo Posada,3489012345,memo.p@email.com,123456
+Pepe,Perro,Criollo / Mestizo,6,Macho,1,Gloria Palacio,3490123456,gloria.p@email.com,123456

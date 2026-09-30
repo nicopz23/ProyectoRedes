@@ -1,174 +1,144 @@
-====================================================================
-GUIA DE PETICIONES HTTP (CURL Y POSTMAN)
-====================================================================
+# ==============================================================================
+# GUÍA DE PETICIONES CURL - PET MANAGER API
+# ==============================================================================
+# Base URL Servidor Backend directo: http://192.168.56.20:8000
+# Base URL a través de Nginx (Dominio): http://petmanager.local
+# ==============================================================================
 
-Servidor Local: http://localhost:8000
-Servidor VM:    http://192.168.56.20:8000
+# ------------------------------------------------------------------------------
+# 1. AUTENTICACIÓN Y SESIÓN (/auth)
+# ------------------------------------------------------------------------------
 
-
-====================================================================
-1. PROPIETARIOS
-====================================================================
-
-1.1 CREAR PROPIETARIO
---------------------------------------------------------------------
-Metodo: POST
-URL:    http://localhost:8000/propietarios
-
-Body (JSON):
-{
-  "nombre": "Nicolas",
-  "telefono": "3046562512",
-  "email": "samnic1524@gmail.com"
-}
-
-cURL:
-curl -X POST "http://localhost:8000/propietarios" \
+# Login de Administrador (Usuario: "Admin", Contraseña: PIN, por defecto "231500")
+curl -X POST http://192.168.56.20:8000/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "Nicolas",
-    "telefono": "3046562512",
-    "email": "samnic1524@gmail.com"
+    "usuario": "Admin",
+    "password": "231500"
   }'
 
-
-1.2 LISTAR TODOS LOS PROPIETARIOS
---------------------------------------------------------------------
-Metodo: GET
-URL:    http://localhost:8000/propietarios
-
-cURL:
-curl -X GET "http://localhost:8000/propietarios"
-
-
-1.3 CONSULTAR UN PROPIETARIO POR ID
---------------------------------------------------------------------
-Metodo: GET
-URL:    http://localhost:8000/propietarios/1
-
-Nota: Cambiar el "1" por el ID del propietario deseado.
-
-cURL:
-curl -X GET "http://localhost:8000/propietarios/1"
-
-
-1.4 ACTUALIZAR PROPIETARIO
---------------------------------------------------------------------
-Metodo: PUT
-URL:    http://localhost:8000/propietarios/1
-
-Body (JSON):
-{
-  "nombre": "Nicolas Actualizado",
-  "telefono": "3046562512",
-  "email": "samnic1524@gmail.com"
-}
-
-cURL:
-curl -X PUT "http://localhost:8000/propietarios/1" \
+# Login de Persona Común / Tutor (Usuario: Correo, Contraseña: por defecto "123456")
+curl -X POST http://192.168.56.20:8000/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "Nicolas Actualizado",
-    "telefono": "3046562512",
-    "email": "samnic1524@gmail.com"
+    "usuario": "carlos.gomez@email.com",
+    "password": "123456"
   }'
 
-
-1.5 ELIMINAR PROPIETARIO
---------------------------------------------------------------------
-Metodo: DELETE
-URL:    http://localhost:8000/propietarios/1
-
-Nota: Al eliminar un propietario, se eliminan automaticamente todas
-sus mascotas asociadas (eliminacion en cascada).
-
-cURL:
-curl -X DELETE "http://localhost:8000/propietarios/1"
-
-
-
-====================================================================
-2. MASCOTAS
-====================================================================
-
-2.1 CREAR MASCOTA
---------------------------------------------------------------------
-Metodo: POST
-URL:    http://localhost:8000/mascotas
-
-Nota: La mascota se asocia al propietario mediante "propietario_id".
-
-Body (JSON):
-{
-  "nombre": "Marley",
-  "especie": "Perro",
-  "raza": "Golden Retriever",
-  "edad": 1,
-  "propietario_id": 1
-}
-
-cURL:
-curl -X POST "http://localhost:8000/mascotas" \
+# Registro de un nuevo tutor con contraseña
+curl -X POST http://192.168.56.20:8000/auth/registro \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "Marley",
+    "nombre": "Nicolas Paz",
+    "email": "nicolas.paz@email.com",
+    "telefono": "3001234567",
+    "password": "mypassword"
+  }'
+
+# Cambiar PIN de administrador
+curl -X POST http://192.168.56.20:8000/admin/cambiar-pin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pin_actual": "231500",
+    "nuevo_pin": "999900"
+  }'
+
+# ------------------------------------------------------------------------------
+# 2. DASHBOARD Y ANALÍTICAS (/dashboard)
+# ------------------------------------------------------------------------------
+
+# Resumen general (Admin)
+curl -X GET http://192.168.56.20:8000/dashboard/resumen
+
+# Resumen privado del tutor (Usuario normal con ID = 1)
+curl -X GET "http://192.168.56.20:8000/dashboard/resumen?propietario_id=1"
+
+# Distribución de mascotas por especie (Global o filtrado)
+curl -X GET http://192.168.56.20:8000/dashboard/por-especie
+curl -X GET "http://192.168.56.20:8000/dashboard/por-especie?propietario_id=1"
+
+# Distribución por grupos de edad
+curl -X GET http://192.168.56.20:8000/dashboard/por-edad
+
+# Top razas más frecuentes
+curl -X GET http://192.168.56.20:8000/dashboard/top-razas
+
+# Restablecer base de datos al dataset oficial original (Acción de Administrador)
+curl -X POST http://192.168.56.20:8000/dashboard/recargar-dataset
+
+# ------------------------------------------------------------------------------
+# 3. MASCOTAS (/mascotas)
+# ------------------------------------------------------------------------------
+
+# Listar todas las mascotas (Admin)
+curl -X GET http://192.168.56.20:8000/mascotas
+
+# Listar únicamente las mascotas del usuario normal (Tutor con ID = 1)
+curl -X GET "http://192.168.56.20:8000/mascotas?propietario_id=1"
+
+# Filtrar mascotas por especie
+curl -X GET "http://192.168.56.20:8000/mascotas?especie=Perro"
+
+# Obtener una mascota por ID
+curl -X GET http://192.168.56.20:8000/mascotas/1
+
+# Registrar una nueva mascota
+curl -X POST http://192.168.56.20:8000/mascotas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Zeus",
     "especie": "Perro",
-    "raza": "Golden Retriever",
-    "edad": 1,
+    "raza": "Rottweiler",
+    "edad": 4,
+    "sexo": "Macho",
+    "vacunado": 1,
     "propietario_id": 1
   }'
 
-
-2.2 LISTAR TODAS LAS MASCOTAS
---------------------------------------------------------------------
-Metodo: GET
-URL:    http://localhost:8000/mascotas
-
-cURL:
-curl -X GET "http://localhost:8000/mascotas"
-
-
-2.3 CONSULTAR UNA MASCOTA POR ID
---------------------------------------------------------------------
-Metodo: GET
-URL:    http://localhost:8000/mascotas/1
-
-Nota: Cambiar el "1" por el ID de la mascota deseada.
-
-cURL:
-curl -X GET "http://localhost:8000/mascotas/1"
-
-
-2.4 ACTUALIZAR MASCOTA
---------------------------------------------------------------------
-Metodo: PUT
-URL:    http://localhost:8000/mascotas/1
-
-Body (JSON):
-{
-  "nombre": "Marley",
-  "especie": "Perro",
-  "raza": "Golden Retriever",
-  "edad": 2,
-  "propietario_id": 1
-}
-
-cURL:
-curl -X PUT "http://localhost:8000/mascotas/1" \
+# Actualizar una mascota
+curl -X PUT http://192.168.56.20:8000/mascotas/1 \
   -H "Content-Type: application/json" \
   -d '{
-    "nombre": "Marley",
+    "nombre": "Max Actualizado",
     "especie": "Perro",
-    "raza": "Golden Retriever",
-    "edad": 2,
+    "raza": "Labrador Dorado",
+    "edad": 5,
+    "sexo": "Macho",
+    "vacunado": 1,
     "propietario_id": 1
   }'
 
+# Eliminar una mascota
+curl -X DELETE http://192.168.56.20:8000/mascotas/1
 
-2.5 ELIMINAR MASCOTA
---------------------------------------------------------------------
-Metodo: DELETE
-URL:    http://localhost:8000/mascotas/1
+# ------------------------------------------------------------------------------
+# 4. PROPIETARIOS / TUTORES (/propietarios)
+# ------------------------------------------------------------------------------
 
-cURL:
-curl -X DELETE "http://localhost:8000/mascotas/1"
+# Listar todos los propietarios (Admin)
+curl -X GET http://192.168.56.20:8000/propietarios
+
+# Obtener un propietario por ID (Perfil propio del usuario)
+curl -X GET http://192.168.56.20:8000/propietarios/1
+
+# Registrar un nuevo propietario
+curl -X POST http://192.168.56.20:8000/propietarios \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Sofia Morales",
+    "telefono": "3109876543",
+    "email": "sofia.morales@email.com",
+    "password": "mypassword"
+  }'
+
+# Actualizar datos de un propietario
+curl -X PUT http://192.168.56.20:8000/propietarios/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Carlos Gomez Actualizado",
+    "telefono": "3009998877",
+    "email": "carlos.nuevo@email.com"
+  }'
+
+# Eliminar un propietario (Elimina en cascada a sus mascotas)
+curl -X DELETE http://192.168.56.20:8000/propietarios/1

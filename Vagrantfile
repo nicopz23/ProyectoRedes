@@ -40,6 +40,7 @@ server {
     # Archivos estáticos del frontend
     root /vagrant/frontend;
     index index.html;
+    sendfile off;
 
     location / {
         try_files $uri $uri/ =404;

@@ -1,13 +1,19 @@
 ---
-- name: Automatizar configuracion del servidor
-  hosts: servidor
+# Playbook para configuración de los 2 servidores del proyecto
+- name: Aprovisionar Servidor Frontend (Nginx)
+  hosts: front
   become: true
-
   tasks:
-    - name: Actualizar repositorios del sistema
+    - name: Instalar Nginx
       apt:
+        name: nginx
+        state: present
         update_cache: yes
 
+- name: Aprovisionar Servidor Backend (FastAPI y SQLite)
+  hosts: back
+  become: true
+  tasks:
     - name: Instalar Python y SQLite
       apt:
         name:
@@ -16,8 +22,9 @@
           - python3-venv
           - sqlite3
         state: present
+        update_cache: yes
 
-    - name: Instalar librerias de requirements.txt
+    - name: Instalar dependencias del Backend
       pip:
         requirements: /vagrant/requirements.txt
         extra_args: --break-system-packages
