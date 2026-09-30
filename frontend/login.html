@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Pet Manager</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .auth-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 35px 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .auth-header h1 {
+            color: #1e3a8a;
+            font-size: 1.6rem;
+            margin: 0 0 6px 0;
+        }
+
+        .auth-header p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .toggle-auth {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.88rem;
+            color: #64748b;
+        }
+
+        .toggle-auth a {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .toggle-auth a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Formulario de Inicio de Sesión -->
+            <div id="seccionLogin">
+                <div class="auth-header">
+                    <h1>PET MANAGER</h1>
+                    <p>Ingresa a tu cuenta para continuar</p>
+                </div>
+
+                <div id="alertaLogin" class="alerta"></div>
+
+                <form id="formLogin" onsubmit="ejecutarLogin(event)">
+                    <div class="campo">
+                        <label for="inputUsuario">Correo o Usuario:</label>
+                        <input type="text" id="inputUsuario" required placeholder="tu.email@email.com o Admin" autocomplete="username">
+                    </div>
+
+                    <div class="campo">
+                        <label for="inputPassword">Contraseña / PIN:</label>
+                        <input type="password" id="inputPassword" required placeholder="Contraseña o PIN de acceso" autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 11px; margin-top: 10px; font-size: 0.95rem;">
+                        Iniciar Sesión
+                    </button>
+                </form>
+
+                <div class="toggle-auth">
+                    ¿No tienes una cuenta de tutor? <a onclick="mostrarRegistro()">Regístrate aquí</a>
+                </div>
+            </div>
+
+            <!-- Formulario de Registro de Nuevo Tutor -->
+            <div id="seccionRegistro" style="display: none;">
+                <div class="auth-header">
+                    <h1>Crear Cuenta de Tutor</h1>
+                    <p>Registra tus datos para gestionar tus mascotas</p>
+                </div>
+
+                <div id="alertaRegistro" class="alerta"></div>
+
+                <form id="formRegistro" onsubmit="ejecutarRegistro(event)">
+                    <div class="campo">
+                        <label for="regNombre">Nombre Completo *</label>
+                        <input type="text" id="regNombre" required placeholder="Ej: Nicolas Paz">
+                    </div>
+
+                    <div class="campo">
+                        <label for="regEmail">Correo Electrónico *</label>
+                        <input type="email" id="regEmail" required placeholder="Ej: nicolas@email.com">
+                    </div>
+
+                    <div class="campo">
+                        <label for="regTelefono">Teléfono de Contacto</label>
+                        <input type="text" id="regTelefono" placeholder="Ej: 3001234567">
+                    </div>
+
+                    <div class="campo">
+                        <label for="regPassword">Contraseña *</label>
+                        <input type="password" id="regPassword" required placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center; padding: 11px; margin-top: 10px; font-size: 0.95rem;">
+                        Crear Cuenta
+                    </button>
+                </form>
+
+                <div class="toggle-auth">
+                    ¿Ya tienes una cuenta? <a onclick="mostrarLogin()">Inicia sesión aquí</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Pet Manager © 2026-09 | Redes e Infraestructura</p>
+    </footer>
+
+    <script>
+        function mostrarRegistro() {
+            document.getElementById("seccionLogin").style.display = "none";
+            document.getElementById("seccionRegistro").style.display = "block";
+            document.getElementById("alertaRegistro").style.display = "none";
+        }
+
+        function mostrarLogin() {
+            document.getElementById("seccionRegistro").style.display = "none";
+            document.getElementById("seccionLogin").style.display = "block";
+            document.getElementById("alertaLogin").style.display = "none";
+        }
+
+        async function ejecutarLogin(e) {
+            e.preventDefault();
+            const usuario = document.getElementById("inputUsuario").value.trim();
+            const password = document.getElementById("inputPassword").value.trim();
+            const alerta = document.getElementById("alertaLogin");
+            alerta.style.display = "none";
+
+            try {
+                const res = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ usuario, password })
+                });
+
+                let data;
+                const contentType = res.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                    data = await res.json();
+                } else {
+                    const raw = await res.text();
+                    throw new Error("El servidor devolvió una respuesta inesperada.");
+                }
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "Error en el inicio de sesión");
+                }
+
+                // Guardar la sesión
+                localStorage.setItem("petmanager_sesion", JSON.stringify(data));
+                localStorage.setItem("petmanager_rol", data.rol);
+                if (data.id) {
+                    localStorage.setItem("petmanager_tutor_id", String(data.id));
+                    localStorage.setItem("petmanager_tutor_nombre", data.nombre);
+                } else {
+                    localStorage.removeItem("petmanager_tutor_id");
+                    localStorage.removeItem("petmanager_tutor_nombre");
+                }
+
+                window.location.href = "/";
+            } catch (err) {
+                alerta.textContent = err.message;
+                alerta.className = "alerta alerta-error";
+                alerta.style.display = "block";
+            }
+        }
+
+        async function ejecutarRegistro(e) {
+            e.preventDefault();
+            const nombre = document.getElementById("regNombre").value.trim();
+            const email = document.getElementById("regEmail").value.trim();
+            const telefono = document.getElementById("regTelefono").value.trim() || null;
+            const password = document.getElementById("regPassword").value.trim();
+            const alerta = document.getElementById("alertaRegistro");
+            alerta.style.display = "none";
+
+            try {
+                const res = await fetch("/auth/registro", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre, email, telefono, password })
+                });
+
+                let data;
+                const contentType = res.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                    data = await res.json();
+                } else {
+                    throw new Error("El servidor devolvió una respuesta inesperada.");
+                }
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "Error al registrar la cuenta");
+                }
+
+                // Guardar la sesión automáticamente
+                localStorage.setItem("petmanager_sesion", JSON.stringify(data));
+                localStorage.setItem("petmanager_rol", data.rol);
+                localStorage.setItem("petmanager_tutor_id", String(data.id));
+                localStorage.setItem("petmanager_tutor_nombre", data.nombre);
+
+                window.location.href = "/";
+            } catch (err) {
+                alerta.textContent = err.message;
+                alerta.className = "alerta alerta-error";
+                alerta.style.display = "block";
+            }
+        }
+
+        // Si ya hay sesión válida activa, redirigir a inicio
+        document.addEventListener("DOMContentLoaded", () => {
+            const sesion = localStorage.getItem("petmanager_sesion");
+            if (sesion) {
+                try {
+                    const datos = JSON.parse(sesion);
+                    if (datos && datos.autenticado) {
+                        window.location.href = "/";
+                    }
+                } catch (e) {
+                    localStorage.removeItem("petmanager_sesion");
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -4,44 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pet Manager - Sistema de Gestión de Mascotas</title>
+    <title>Pet Manager - Sistema de Censo y Gestión de Mascotas</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
 
-    <!-- Encabezado simple -->
+    <!-- Encabezado con navegación -->
     <header>
         <div class="container">
-            <h1>PET MANAGER</h1>
-            <nav>
+            <div class="brand-wrapper">
+                <h1><a href="/">PET MANAGER</a></h1>
+                <span id="badgeRol" class="indicador-rol badge badge-ciudadano">...</span>
+            </div>
+            <nav class="nav-links">
                 <a href="/" class="active">Inicio</a>
+                <a href="/dashboard.html">Dashboard</a>
                 <a href="/mascotas.html">Mascotas</a>
                 <a href="/propietarios.html">Propietarios</a>
-                <a href="/docs" target="_blank">Documentacion API (/docs)</a>
+                <a href="/docs" target="_blank">API Docs</a>
+                <button id="btnCambiarPin" class="btn btn-outline" style="display: none; font-size: 0.82rem;">🔑 Cambiar PIN</button>
+                <button id="btnCerrarSesion" class="btn btn-outline" style="font-size: 0.82rem;">🚪 Cerrar Sesión</button>
             </nav>
         </div>
     </header>
 
     <!-- Contenido Principal -->
     <main class="container">
-        <div class="panel-inicio">
-            <h2>Bienvenido a Pet Manager</h2>
-            <p>Sistema sencillo para gestionar mascotas y sus propietarios.</p>
+        <section class="panel-hero">
+            <h2>Sistema de Censo y Bienestar Animal</h2>
+            <p>
+                Plataforma integral para el monitoreo poblacional, control de vacunación y registro de animales de compañía.
+                Permite la consulta de indicadores generales, visualización de estadísticas y la administración de mascotas y tutores responsables.
+            </p>
 
-            <!-- Botones de acceso principales -->
-            <div class="botones-inicio">
-                <a href="/mascotas.html" class="btn btn-primary">[ Mascotas ]</a>
-                <a href="/propietarios.html" class="btn btn-primary">[ Propietarios ]</a>
+            <!-- Acceso y navegación principal -->
+            <div class="roles-cards">
+                <div class="role-entry-card">
+                    <div>
+                        <h3>📊 Mi Dashboard</h3>
+                        <p>Visualiza el estado de vacunación, edades y métricas de tus animales registrados (o de toda la comunidad si eres administrador).</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <a href="/dashboard.html" class="btn btn-primary" style="width: 100%; justify-content: center;">Ver Dashboard</a>
+                    </div>
+                </div>
+
+                <div class="role-entry-card">
+                    <div>
+                        <h3>🐾 Mis Mascotas</h3>
+                        <p>Consulta, registra y actualiza los datos de tus animales de compañía asociados exclusivamente a tu cuenta.</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <a href="/mascotas.html" class="btn btn-success" style="width: 100%; justify-content: center;">Gestionar Mascotas</a>
+                    </div>
+                </div>
+
+                <div class="role-entry-card">
+                    <div>
+                        <h3>👥 Directorio / Mi Perfil</h3>
+                        <p>Consulta y actualiza tus datos de contacto registrados, o gestiona el directorio si eres administrador.</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <a href="/propietarios.html" class="btn btn-secondary" style="width: 100%; justify-content: center;">Ver Perfil / Directorio</a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
     </main>
 
     <!-- Pie de página -->
     <footer>
-        <p>Proyecto de Mitad de Curso - Redes y Servicios</p>
+        <p>Pet Manager © 2026-09 | Redes e Infraestructura</p>
     </footer>
 
+    <script src="/js/roles.js"></script>
 </body>
 
 </html>

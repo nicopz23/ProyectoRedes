@@ -5,19 +5,18 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.database import inicializar_base_datos
-from backend.routes import propietarios, mascotas
+from backend.routes import propietarios, mascotas, dashboard, admin, auth
 
-# Directorio del frontend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
-# Creamos la aplicación FastAPI
 app = FastAPI(
-    title="API de Gestión de Mascotas",
-    description="Proyecto de mitad de curso para gestionar mascotas y propietarios"
+    title="Pet Manager API - Censo y Gestión de Mascotas",
+    description="API REST para autenticación, dashboards de censo animal y administración de mascotas y propietarios",
+    version="2.2.0"
 )
 
-# Permitir comunicación con el frontend sin seguridad por ahora
+# Permitir CORS para solicitudes desde el servidor de Frontend (Nginx o local)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,28 +25,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Al arrancar, creamos las tablas en SQLite si no existen
+# Al arrancar, verificamos esquema y sembrado inicial de datos
 inicializar_base_datos()
 
-# Registramos las rutas de la API
+# Registramos routers de la API
+app.include_router(auth.router)
+app.include_router(admin.router)
+app.include_router(dashboard.router)
 app.include_router(propietarios.router)
 app.include_router(mascotas.router)
 
-# Montamos las carpetas de archivos estáticos (CSS y JS)
-app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
+# Servir archivos estáticos del frontend (compatible con modo desarrollo local)
+if os.path.exists(os.path.join(FRONTEND_DIR, "css")):
+    app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
 if os.path.exists(os.path.join(FRONTEND_DIR, "js")):
     app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="js")
 
-# Endpoint raíz
 @app.get("/")
 def inicio(request: Request):
-    # Si la petición viene de un navegador web, sirve index.html
     if "text/html" in request.headers.get("accept", ""):
         return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-    # Si la petición pide JSON o curl, devuelve el mensaje de la API
     return {
-        "mensaje": "API de Gestión de Mascotas"
+        "sistema": "Pet Manager - Sistema de Censo y Gestión de Mascotas",
+        "version": "2.2.0",
+        "endpoints": {
+            "auth": "/auth/login",
+            "dashboard": "/dashboard/resumen",
+            "mascotas": "/mascotas",
+            "propietarios": "/propietarios",
+            "admin": "/admin/estado",
+            "documentacion": "/docs"
+        }
     }
+
+@app.get("/login.html")
+def pagina_login():
+    return FileResponse(os.path.join(FRONTEND_DIR, "login.html"))
+
+@app.get("/dashboard.html")
+def pagina_dashboard():
+    return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
 @app.get("/mascotas.html")
 def pagina_mascotas():

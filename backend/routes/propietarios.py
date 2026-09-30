@@ -7,20 +7,18 @@ router = APIRouter(
     tags=["Propietarios"]
 )
 
-# 1. Obtener todos los propietarios
+# 1. Obtener todos los propietarios (para vista de administrador)
 @router.get("")
 def listar_propietarios():
     conexion = obtener_conexion()
     cursor = conexion.cursor()
-    # Traemos todos los propietarios
-    cursor.execute("SELECT * FROM propietarios")
+    cursor.execute("SELECT id, nombre, telefono, email FROM propietarios ORDER BY id ASC")
     filas = cursor.fetchall()
     
-    # También podemos consultar las mascotas de cada propietario para que el frontend las muestre
     resultado = []
     for fila in filas:
         propietario_dict = dict(fila)
-        cursor.execute("SELECT id, nombre, especie, raza, edad FROM mascotas WHERE propietario_id = ?", (fila["id"],))
+        cursor.execute("SELECT id, nombre, especie, raza, edad, sexo, vacunado FROM mascotas WHERE propietario_id = ?", (fila["id"],))
         mascotas = [dict(m) for m in cursor.fetchall()]
         propietario_dict["mascotas"] = mascotas
         resultado.append(propietario_dict)
@@ -28,12 +26,12 @@ def listar_propietarios():
     conexion.close()
     return resultado
 
-# 2. Obtener un solo propietario por su ID
+# 2. Obtener un solo propietario por su ID (perfil propio o consulta admin)
 @router.get("/{propietario_id}")
 def obtener_propietario(propietario_id: int):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
-    cursor.execute("SELECT * FROM propietarios WHERE id = ?", (propietario_id,))
+    cursor.execute("SELECT id, nombre, telefono, email FROM propietarios WHERE id = ?", (propietario_id,))
     fila = cursor.fetchone()
 
     if not fila:
@@ -44,7 +42,7 @@ def obtener_propietario(propietario_id: int):
         )
 
     propietario_dict = dict(fila)
-    cursor.execute("SELECT id, nombre, especie, raza, edad FROM mascotas WHERE propietario_id = ?", (propietario_id,))
+    cursor.execute("SELECT id, nombre, especie, raza, edad, sexo, vacunado FROM mascotas WHERE propietario_id = ?", (propietario_id,))
     propietario_dict["mascotas"] = [dict(m) for m in cursor.fetchall()]
 
     conexion.close()
@@ -56,11 +54,13 @@ def crear_propietario(datos: PropietarioSchema):
     if not datos.nombre.strip():
         raise HTTPException(status_code=400, detail="El nombre del propietario es obligatorio")
 
+    password = datos.password.strip() if datos.password else "123456"
+
     conexion = obtener_conexion()
     cursor = conexion.cursor()
     cursor.execute(
-        "INSERT INTO propietarios (nombre, telefono, email) VALUES (?, ?, ?)",
-        (datos.nombre.strip(), datos.telefono, datos.email)
+        "INSERT INTO propietarios (nombre, telefono, email, password) VALUES (?, ?, ?, ?)",
+        (datos.nombre.strip(), datos.telefono, datos.email, password)
     )
     conexion.commit()
     nuevo_id = cursor.lastrowid
@@ -83,15 +83,18 @@ def actualizar_propietario(propietario_id: int, datos: PropietarioSchema):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
-    # Comprobamos que el propietario exista
-    cursor.execute("SELECT * FROM propietarios WHERE id = ?", (propietario_id,))
-    if not cursor.fetchone():
+    cursor.execute("SELECT id, password FROM propietarios WHERE id = ?", (propietario_id,))
+    fila = cursor.fetchone()
+    if not fila:
         conexion.close()
         raise HTTPException(status_code=404, detail="Propietario no encontrado")
 
+    # Si se especificó una nueva contraseña, actualizarla; si no, mantener la existente
+    nueva_password = datos.password.strip() if (datos.password and datos.password.strip()) else fila["password"]
+
     cursor.execute(
-        "UPDATE propietarios SET nombre = ?, telefono = ?, email = ? WHERE id = ?",
-        (datos.nombre.strip(), datos.telefono, datos.email, propietario_id)
+        "UPDATE propietarios SET nombre = ?, telefono = ?, email = ?, password = ? WHERE id = ?",
+        (datos.nombre.strip(), datos.telefono, datos.email, nueva_password, propietario_id)
     )
     conexion.commit()
     conexion.close()
@@ -103,24 +106,23 @@ def actualizar_propietario(propietario_id: int, datos: PropietarioSchema):
         "email": datos.email
     }
 
-# 5. Eliminar un propietario
+# 5. Eliminar un propietario (cascada de mascotas)
 @router.delete("/{propietario_id}")
 def eliminar_propietario(propietario_id: int):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
-    cursor.execute("SELECT * FROM propietarios WHERE id = ?", (propietario_id,))
+    cursor.execute("SELECT id, nombre FROM propietarios WHERE id = ?", (propietario_id,))
     propietario = cursor.fetchone()
 
     if not propietario:
         conexion.close()
         raise HTTPException(status_code=404, detail="Propietario no encontrado")
 
-    # Al eliminar al propietario, por ON DELETE CASCADE se borran también sus mascotas
     cursor.execute("DELETE FROM propietarios WHERE id = ?", (propietario_id,))
     conexion.commit()
     conexion.close()
 
     return {
-        "mensaje": f"Propietario con ID {propietario_id} eliminado con éxito"
+        "mensaje": f"Propietario '{propietario['nombre']}' eliminado con éxito"
     }

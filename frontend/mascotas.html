@@ -1,44 +1,76 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mascotas - Pet Manager</title>
+    <title>Pet Manager - Gestión de Mascotas</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
 
-    <!-- Encabezado simple -->
+    <!-- Encabezado con navegación -->
     <header>
         <div class="container">
-            <h1>PET MANAGER</h1>
-            <nav>
+            <div class="brand-wrapper">
+                <h1><a href="/">PET MANAGER</a></h1>
+                <span id="badgeRol" class="indicador-rol badge badge-ciudadano">...</span>
+            </div>
+            <nav class="nav-links">
                 <a href="/">Inicio</a>
+                <a href="/dashboard.html">Dashboard</a>
                 <a href="/mascotas.html" class="active">Mascotas</a>
                 <a href="/propietarios.html">Propietarios</a>
-                <a href="/docs" target="_blank">Documentacion API (/docs)</a>
+                <a href="/docs" target="_blank">API Docs</a>
+                <button id="btnCambiarPin" class="btn btn-outline" style="display: none; font-size: 0.82rem;">🔑 Cambiar PIN</button>
+                <button id="btnCerrarSesion" class="btn btn-outline" style="font-size: 0.82rem;">🚪 Cerrar Sesión</button>
             </nav>
         </div>
     </header>
 
     <!-- Contenido Principal -->
     <main class="container">
-        <!-- Barra de título y botón nuevo -->
-        <div class="encabezado-seccion">
-            <h2>MASCOTAS</h2>
-            <button id="btnNuevaMascota" class="btn btn-primary">+ Nueva</button>
-        </div>
 
-        <!-- Alerta de mensajes -->
+        <!-- Mensajes de Alerta -->
         <div id="mensajeAlerta" class="alerta"></div>
 
-        <!-- Lista donde se mostrarán las tarjetas de mascotas -->
-        <div id="listaMascotas">
-            <p>Cargando mascotas...</p>
+        <!-- Encabezado de la página -->
+        <div class="encabezado-seccion">
+            <div>
+                <h2 id="tituloSeccionMascotas">Mis Mascotas</h2>
+                <div class="subtitulo" id="subtituloMascotas">Gestiona los animales de compañía registrados bajo tu cuenta</div>
+            </div>
+            <div>
+                <button id="btnNuevaMascota" class="btn btn-success">+ Registrar Mascota</button>
+            </div>
         </div>
+
+        <!-- Panel de Filtros y Búsqueda -->
+        <div class="panel-filtros">
+            <input type="text" id="inputBuscar" placeholder="🔍 Buscar por nombre o raza...">
+            <select id="selectFiltroEspecie">
+                <option value="">Todas las especies</option>
+                <option value="Perro">Perros</option>
+                <option value="Gato">Gatos</option>
+                <option value="Ave">Aves</option>
+                <option value="Conejo">Conejos</option>
+            </select>
+            <select id="selectFiltroVacuna">
+                <option value="">Cualquier estado de vacuna</option>
+                <option value="1">Solo Vacunados</option>
+                <option value="0">Solo No Vacunados</option>
+            </select>
+        </div>
+
+        <!-- Listado en cuadrícula de tarjetas -->
+        <div id="listaMascotas" class="grid-tarjetas">
+            <p>Cargando información de mascotas...</p>
+        </div>
+
     </main>
 
-    <!-- Modal para Agregar / Editar Mascota -->
+    <!-- Modal para Agregar o Editar Mascota -->
     <div id="modalMascota" class="modal">
         <div class="modal-contenido">
             <div class="modal-header">
@@ -50,14 +82,14 @@
                 <input type="hidden" id="mascotaId">
 
                 <div class="campo">
-                    <label for="nombre">Nombre:</label>
-                    <input type="text" id="nombre" required placeholder="Ej: Max">
+                    <label for="nombre">Nombre de la Mascota *</label>
+                    <input type="text" id="nombre" required placeholder="Ej: Toby">
                 </div>
 
                 <div class="campo">
-                    <label for="especie">Especie:</label>
+                    <label for="especie">Especie *</label>
                     <select id="especie" required>
-                        <option value="">-- Seleccione una especie --</option>
+                        <option value="">-- Seleccionar --</option>
                         <option value="Perro">Perro</option>
                         <option value="Gato">Gato</option>
                         <option value="Ave">Ave</option>
@@ -67,19 +99,36 @@
                 </div>
 
                 <div class="campo">
-                    <label for="raza">Raza:</label>
-                    <input type="text" id="raza" placeholder="Ej: Labrador">
+                    <label for="raza">Raza</label>
+                    <input type="text" id="raza" placeholder="Ej: Golden Retriever">
                 </div>
 
                 <div class="campo">
-                    <label for="edad">Edad (años):</label>
-                    <input type="number" id="edad" min="0" placeholder="Ej: 3">
+                    <label for="edad">Edad (en años)</label>
+                    <input type="number" id="edad" min="0" max="40" placeholder="Ej: 3">
                 </div>
 
                 <div class="campo">
-                    <label for="propietarioId">Propietario:</label>
+                    <label for="sexo">Sexo</label>
+                    <select id="sexo">
+                        <option value="Macho">Macho</option>
+                        <option value="Hembra">Hembra</option>
+                        <option value="No especificado">No especificado</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="vacunado">Estado de Vacunación</label>
+                    <select id="vacunado">
+                        <option value="1">Vacunado / Esquema Completo</option>
+                        <option value="0">Pendiente / No Vacunado</option>
+                    </select>
+                </div>
+
+                <div class="campo" id="contenedorCampoPropietario">
+                    <label for="propietarioId">Propietario Asociado *</label>
                     <select id="propietarioId" required>
-                        <option value="">Cargando propietarios...</option>
+                        <option value="">-- Seleccione Propietario --</option>
                     </select>
                 </div>
 
@@ -93,10 +142,12 @@
 
     <!-- Pie de página -->
     <footer>
-        <p>Proyecto de Mitad de Curso - Redes y Servicios</p>
+        <p>Pet Manager © 2026-09 | Redes e Infraestructura</p>
     </footer>
 
-    <!-- Script de lógica que se activará en la Fase 7 -->
+    <script src="/js/roles.js"></script>
     <script src="/js/mascotas.js"></script>
+
 </body>
+
 </html>

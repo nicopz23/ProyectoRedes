@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
+from typing import Optional
 from backend.database import obtener_conexion
 from backend.schemas import MascotaSchema
 
@@ -7,24 +8,51 @@ router = APIRouter(
     tags=["Mascotas"]
 )
 
-# 1. Obtener todas las mascotas
+# 1. Obtener mascotas (con soporte para filtrar por especie y por propietario)
 @router.get("")
-def listar_mascotas():
+def listar_mascotas(
+    especie: Optional[str] = Query(default=None, description="Filtrar por especie"),
+    propietario_id: Optional[int] = Query(default=None, description="Filtrar por ID de propietario")
+):
+    esp = especie if isinstance(especie, str) and especie.strip() else None
+    prop_id = propietario_id if isinstance(propietario_id, int) else None
+    if isinstance(propietario_id, str) and propietario_id.isdigit():
+        prop_id = int(propietario_id)
+
     conexion = obtener_conexion()
     cursor = conexion.cursor()
-    # Usamos LEFT JOIN para traer también el nombre del propietario de forma sencilla
-    cursor.execute("""
+    
+    query = """
         SELECT 
             m.id, 
             m.nombre, 
             m.especie, 
             m.raza, 
             m.edad, 
+            m.sexo,
+            m.vacunado,
             m.propietario_id,
             p.nombre AS propietario_nombre
         FROM mascotas m
         LEFT JOIN propietarios p ON m.propietario_id = p.id
-    """)
+    """
+    condiciones = []
+    params = []
+
+    if esp:
+        condiciones.append("LOWER(m.especie) = LOWER(?)")
+        params.append(esp)
+
+    if prop_id is not None:
+        condiciones.append("m.propietario_id = ?")
+        params.append(prop_id)
+
+    if condiciones:
+        query += " WHERE " + " AND ".join(condiciones)
+
+    query += " ORDER BY m.id ASC"
+
+    cursor.execute(query, params)
     filas = cursor.fetchall()
     conexion.close()
     return [dict(f) for f in filas]
@@ -41,6 +69,8 @@ def obtener_mascota(mascota_id: int):
             m.especie, 
             m.raza, 
             m.edad, 
+            m.sexo,
+            m.vacunado,
             m.propietario_id,
             p.nombre AS propietario_nombre
         FROM mascotas m
@@ -61,7 +91,6 @@ def obtener_mascota(mascota_id: int):
 # 3. Registrar una nueva mascota
 @router.post("", status_code=status.HTTP_201_CREATED)
 def crear_mascota(datos: MascotaSchema):
-    # Validaciones sencillas
     if not datos.nombre.strip():
         raise HTTPException(status_code=400, detail="El nombre de la mascota es obligatorio")
     
@@ -74,7 +103,6 @@ def crear_mascota(datos: MascotaSchema):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
-    # Validación fundamental: comprobar que el propietario exista
     cursor.execute("SELECT id FROM propietarios WHERE id = ?", (datos.propietario_id,))
     if not cursor.fetchone():
         conexion.close()
@@ -83,11 +111,18 @@ def crear_mascota(datos: MascotaSchema):
             detail=f"No se puede registrar: el propietario con ID {datos.propietario_id} no existe"
         )
 
-    # Insertamos la mascota
     cursor.execute("""
-        INSERT INTO mascotas (nombre, especie, raza, edad, propietario_id)
-        VALUES (?, ?, ?, ?, ?)
-    """, (datos.nombre.strip(), datos.especie.strip(), datos.raza, datos.edad, datos.propietario_id))
+        INSERT INTO mascotas (nombre, especie, raza, edad, sexo, vacunado, propietario_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        datos.nombre.strip(), 
+        datos.especie.strip(), 
+        datos.raza.strip() if datos.raza else None, 
+        datos.edad, 
+        datos.sexo if datos.sexo else "No especificado",
+        1 if datos.vacunado else 0,
+        datos.propietario_id
+    ))
     
     conexion.commit()
     nuevo_id = cursor.lastrowid
@@ -99,6 +134,8 @@ def crear_mascota(datos: MascotaSchema):
         "especie": datos.especie.strip(),
         "raza": datos.raza,
         "edad": datos.edad,
+        "sexo": datos.sexo,
+        "vacunado": 1 if datos.vacunado else 0,
         "propietario_id": datos.propietario_id
     }
 
@@ -117,13 +154,11 @@ def actualizar_mascota(mascota_id: int, datos: MascotaSchema):
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 
-    # Verificar que la mascota exista
     cursor.execute("SELECT id FROM mascotas WHERE id = ?", (mascota_id,))
     if not cursor.fetchone():
         conexion.close()
         raise HTTPException(status_code=404, detail="Mascota no encontrada")
 
-    # Verificar que el propietario exista
     cursor.execute("SELECT id FROM propietarios WHERE id = ?", (datos.propietario_id,))
     if not cursor.fetchone():
         conexion.close()
@@ -132,12 +167,20 @@ def actualizar_mascota(mascota_id: int, datos: MascotaSchema):
             detail=f"El propietario con ID {datos.propietario_id} no existe"
         )
 
-    # Actualizar datos
     cursor.execute("""
         UPDATE mascotas 
-        SET nombre = ?, especie = ?, raza = ?, edad = ?, propietario_id = ?
+        SET nombre = ?, especie = ?, raza = ?, edad = ?, sexo = ?, vacunado = ?, propietario_id = ?
         WHERE id = ?
-    """, (datos.nombre.strip(), datos.especie.strip(), datos.raza, datos.edad, datos.propietario_id, mascota_id))
+    """, (
+        datos.nombre.strip(), 
+        datos.especie.strip(), 
+        datos.raza.strip() if datos.raza else None, 
+        datos.edad, 
+        datos.sexo if datos.sexo else "No especificado",
+        1 if datos.vacunado else 0,
+        datos.propietario_id, 
+        mascota_id
+    ))
     
     conexion.commit()
     conexion.close()
@@ -148,6 +191,8 @@ def actualizar_mascota(mascota_id: int, datos: MascotaSchema):
         "especie": datos.especie.strip(),
         "raza": datos.raza,
         "edad": datos.edad,
+        "sexo": datos.sexo,
+        "vacunado": 1 if datos.vacunado else 0,
         "propietario_id": datos.propietario_id
     }
 
