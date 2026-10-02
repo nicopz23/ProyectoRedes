@@ -105,7 +105,6 @@ async function cargarPerfilPropio(tutorId) {
                 </div>
                 <div class="acciones" style="margin-top: 20px;">
                     <button class="btn btn-primary" onclick="editarPropietario(${p.id})">✏️ Actualizar Mis Datos</button>
-                    <button class="btn btn-outline" style="color: #3b82f6; border-color: #3b82f6;" onclick="abrirModalSeleccionTutor()">Cambiar Cuenta</button>
                 </div>
             </div>
         `;
