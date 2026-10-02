@@ -25,11 +25,9 @@ Vagrant.configure("2") do |config|
 
     front.vm.provision "shell", inline: <<-SHELL
       set -e
-      echo "=== [FRONT] Instalando y configurando Nginx ==="
       apt-get update -y
       apt-get install -y nginx
 
-      echo "=== [FRONT] Configurando VirtualHost con dominio petmanager.local ==="
       cat << 'EOF' > /etc/nginx/sites-available/petmanager
 server {
     listen 80 default_server;
@@ -61,8 +59,6 @@ EOF
       ln -sf /etc/nginx/sites-available/petmanager /etc/nginx/sites-enabled/
       systemctl restart nginx
       systemctl enable nginx
-
-      echo "=== [FRONT] Servidor Web Nginx activo en http://192.168.56.10 (petmanager.local) ==="
     SHELL
   end
 
@@ -84,16 +80,13 @@ EOF
 
     back.vm.provision "shell", inline: <<-SHELL
       set -e
-      echo "=== [BACK] Instalando Python, pip y SQLite ==="
       apt-get update -y
       apt-get install -y python3 python3-pip python3-venv sqlite3
 
-      echo "=== [BACK] Creando entorno virtual e instalando dependencias ==="
       python3 -m venv /home/vagrant/venv
       /home/vagrant/venv/bin/pip install --upgrade pip
       /home/vagrant/venv/bin/pip install -r /vagrant/requirements.txt
 
-      echo "=== [BACK] Configurando servicio systemd para la API REST ==="
       cat << 'EOF' > /etc/systemd/system/gestion-mascotas.service
 [Unit]
 Description=Servicio API REST Gestion de Mascotas y Censo
@@ -112,7 +105,6 @@ EOF
       systemctl daemon-reload
       systemctl enable --now gestion-mascotas.service
 
-      echo "=== [BACK] API REST iniciada en http://192.168.56.20:8000 ==="
     SHELL
   end
 
