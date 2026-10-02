@@ -78,8 +78,7 @@ function cargarMascotas() {
         if (!tutorId) {
             contenedorLista.innerHTML = `
                 <div style="grid-column: 1 / -1; background: white; padding: 25px; border-radius: 8px; border: 1px dashed #cbd5e1; text-align: center;">
-                    <p style="color: #64748b; margin-bottom: 15px;">No has seleccionado un perfil de tutor activo.</p>
-                    <button class="btn btn-primary" onclick="abrirModalSeleccionTutor()">Seleccionar o Crear Mi Perfil</button>
+                    <p style="color: #64748b;">No se encontró una sesión activa de tutor.</p>
                 </div>
             `;
             return;
@@ -212,8 +211,7 @@ function abrirModal(mascota = null) {
     // Si es persona común, ocultamos el selector de propietario y lo auto-asignamos
     if (!admin) {
         if (!tutorId) {
-            alert("Por favor selecciona primero tu cuenta de tutor.");
-            abrirModalSeleccionTutor();
+            alert("No se encontró una sesión activa de tutor.");
             return;
         }
         contenedorCampoPropietario.style.display = "none";
