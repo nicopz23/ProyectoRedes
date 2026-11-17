@@ -1,0 +1,159 @@
+version: "3.8"
+services:
+  # 1. Base de Datos Centralizada PostgreSQL
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: petmanager_db
+      POSTGRES_USER: petuser
+      POSTGRES_PASSWORD: petpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init_postgres.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    networks:
+      - backend-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 512M
+        reservations:
+          cpus: "0.20"
+          memory: 128M
+
+  # 2. Microservicio de Autenticación, Seguridad y Roles (Alta Disponibilidad)
+  service-auth:
+    image: petmanager-service-auth:latest
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petuser
+      DB_PASSWORD: petpass
+      DB_NAME: petmanager_db
+      PORT: 8001
+    networks:
+      - frontend-net
+      - backend-net
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 300M
+        reservations:
+          cpus: "0.10"
+          memory: 80M
+
+  # 3. Microservicio de Mascotas, Propietarios y Analíticas (Alta Disponibilidad)
+  service-mascotas:
+    image: petmanager-service-mascotas:latest
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petuser
+      DB_PASSWORD: petpass
+      DB_NAME: petmanager_db
+      PORT: 8002
+    networks:
+      - frontend-net
+      - backend-net
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 300M
+        reservations:
+          cpus: "0.10"
+          memory: 80M
+
+  # 4. Frontend Web y Reverse Proxy Ingress (Alta Disponibilidad)
+  frontend:
+    image: petmanager-frontend:latest
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: ingress
+    networks:
+      - frontend-net
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 150M
+        reservations:
+          cpus: "0.05"
+          memory: 30M
+
+# Volúmenes Persistentes
+volumes:
+  postgres_data:
+    driver: local
+
+# Redes Overlay (Aislamiento y Seguridad en Docker Swarm)
+networks:
+  frontend-net:
+    driver: overlay
+    attachable: true
+  backend-net:
+    driver: overlay
+    attachable: true
+
