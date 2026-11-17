@@ -212,20 +212,31 @@ def eliminar_propietario(propietario_id: int):
 
 # ================= RUTAS DE DASHBOARD Y ANALÍTICAS =================
 
+def _sanitizar_id(valor) -> Optional[int]:
+    if isinstance(valor, int):
+        return valor
+    try:
+        if isinstance(valor, str) and valor.isdigit():
+            return int(valor)
+    except Exception:
+        pass
+    return None
+
 @app.get("/dashboard/resumen")
 def resumen_dashboard(propietario_id: Optional[int] = Query(default=None)):
-    if propietario_id is not None:
-        total_m = ejecutar_consulta("SELECT COUNT(*) AS total FROM mascotas WHERE propietario_id = ?", (propietario_id,), una_fila=True)["total"]
-        prom_e = ejecutar_consulta("SELECT AVG(edad) AS promedio FROM mascotas WHERE propietario_id = ? AND edad IS NOT NULL", (propietario_id,), una_fila=True)["promedio"]
-        vac_m = ejecutar_consulta("SELECT COUNT(*) AS vac FROM mascotas WHERE propietario_id = ? AND vacunado = 1", (propietario_id,), una_fila=True)["vac"]
-        esp_m = ejecutar_consulta("SELECT COUNT(DISTINCT especie) AS esp FROM mascotas WHERE propietario_id = ?", (propietario_id,), una_fila=True)["esp"]
+    prop_id = _sanitizar_id(propietario_id)
+    if prop_id is not None:
+        total_m = ejecutar_consulta("SELECT COUNT(*) AS total FROM mascotas WHERE propietario_id = ?", (prop_id,), una_fila=True)["total"]
+        prom_e = ejecutar_consulta("SELECT AVG(edad) AS promedio FROM mascotas WHERE propietario_id = ? AND edad IS NOT NULL", (prop_id,), una_fila=True)["promedio"]
+        vac_m = ejecutar_consulta("SELECT COUNT(*) AS vac FROM mascotas WHERE propietario_id = ? AND vacunado = 1", (prop_id,), una_fila=True)["vac"]
+        esp_m = ejecutar_consulta("SELECT COUNT(DISTINCT especie) AS esp FROM mascotas WHERE propietario_id = ?", (prop_id,), una_fila=True)["esp"]
 
         pct = round((vac_m / total_m * 100), 1) if total_m > 0 else 0
         return {
             "total_mascotas": total_m,
             "total_propietarios": 1 if total_m > 0 else 0,
-            "promedio_edad": round(prom_e, 1) if prom_e is not None else 0,
-            "vacunados_total": vac_m,
+            "edad_promedio": round(prom_e, 1) if prom_e is not None else 0,
+            "total_vacunados": vac_m,
             "porcentaje_vacunados": pct,
             "total_especies": esp_m
         }
@@ -240,22 +251,24 @@ def resumen_dashboard(propietario_id: Optional[int] = Query(default=None)):
         return {
             "total_mascotas": total_m,
             "total_propietarios": total_p,
-            "promedio_edad": round(prom_e, 1) if prom_e is not None else 0,
-            "vacunados_total": vac_m,
+            "edad_promedio": round(prom_e, 1) if prom_e is not None else 0,
+            "total_vacunados": vac_m,
             "porcentaje_vacunados": pct,
             "total_especies": esp_m
         }
 
-@app.get("/dashboard/distribucion-especie")
+@app.get("/dashboard/por-especie")
 def distribucion_por_especie(propietario_id: Optional[int] = Query(default=None)):
     if propietario_id is not None:
+        prop_id = _sanitizar_id(propietario_id)
+    if prop_id is not None:
         filas = ejecutar_consulta("""
             SELECT especie, COUNT(*) AS cantidad 
             FROM mascotas 
             WHERE propietario_id = ? 
             GROUP BY especie 
             ORDER BY cantidad DESC
-        """, (propietario_id,))
+        """, (prop_id,))
     else:
         filas = ejecutar_consulta("""
             SELECT especie, COUNT(*) AS cantidad 
@@ -263,48 +276,88 @@ def distribucion_por_especie(propietario_id: Optional[int] = Query(default=None)
             GROUP BY especie 
             ORDER BY cantidad DESC
         """)
-    return {
-        "etiquetas": [f["especie"] for f in filas],
-        "valores": [f["cantidad"] for f in filas]
-    }
+    return [{"especie": f["especie"], "cantidad": f["cantidad"]} for f in filas]
 
-@app.get("/dashboard/distribucion-edad")
+@app.get("/dashboard/por-edad")
 def distribucion_por_edad(propietario_id: Optional[int] = Query(default=None)):
-    if propietario_id is not None:
-        filas = ejecutar_consulta("SELECT edad FROM mascotas WHERE propietario_id = ? AND edad IS NOT NULL", (propietario_id,))
+    prop_id = _sanitizar_id(propietario_id)
+    filtro_sql = "WHERE propietario_id = ?" if prop_id is not None else ""
+    params = (prop_id,) if prop_id is not None else ()
+    
+    filas = ejecutar_consulta(f"""
+        SELECT 
+            CASE 
+                WHEN edad BETWEEN 0 AND 2 THEN 'Cachorros / Jóvenes (0-2 años)'
+                WHEN edad BETWEEN 3 AND 7 THEN 'Adultos (3-7 años)'
+                WHEN edad >= 8 THEN 'Seniors (8+ años)'
+                ELSE 'Sin especificar'
+            END AS rango,
+            COUNT(*) AS cantidad
+        FROM mascotas
+        {filtro_sql}
+        GROUP BY rango
+        ORDER BY cantidad DESC
+    """, params)
+    return [{"rango": f["rango"], "cantidad": f["cantidad"]} for f in filas]
+
+@app.get("/dashboard/top-razas")
+def top_razas(propietario_id: Optional[int] = Query(default=None)):
+    prop_id = _sanitizar_id(propietario_id)
+    if prop_id is not None:
+        filas = ejecutar_consulta("""
+            SELECT raza, COUNT(*) AS cantidad
+            FROM mascotas
+            WHERE propietario_id = ? AND raza IS NOT NULL AND TRIM(raza) != ''
+            GROUP BY raza
+            ORDER BY cantidad DESC
+            LIMIT 6
+        """, (prop_id,))
     else:
-        filas = ejecutar_consulta("SELECT edad FROM mascotas WHERE edad IS NOT NULL")
+        filas = ejecutar_consulta("""
+            SELECT raza, COUNT(*) AS cantidad
+            FROM mascotas
+            WHERE raza IS NOT NULL AND TRIM(raza) != ''
+            GROUP BY raza
+            ORDER BY cantidad DESC
+            LIMIT 6
+        """)
+    return [{"raza": f["raza"], "cantidad": f["cantidad"]} for f in filas]
 
-    rangos = {"Cachorro / Joven (0-2 años)": 0, "Adulto (3-7 años)": 0, "Senior (8+ años)": 0}
-    for f in filas:
-        edad = f["edad"]
-        if edad <= 2:
-            rangos["Cachorro / Joven (0-2 años)"] += 1
-        elif edad <= 7:
-            rangos["Adulto (3-7 años)"] += 1
-        else:
-            rangos["Senior (8+ años)"] += 1
-
-    return {"etiquetas": list(rangos.keys()), "valores": list(rangos.values())}
-
-@app.get("/dashboard/estado-vacunacion")
-def estado_vacunacion(propietario_id: Optional[int] = Query(default=None)):
-    if propietario_id is not None:
-        v = ejecutar_consulta("SELECT COUNT(*) AS c FROM mascotas WHERE propietario_id = ? AND vacunado = 1", (propietario_id,), una_fila=True)["c"]
-        nv = ejecutar_consulta("SELECT COUNT(*) AS c FROM mascotas WHERE propietario_id = ? AND (vacunado = 0 OR vacunado IS NULL)", (propietario_id,), una_fila=True)["c"]
+@app.get("/dashboard/vacunacion-por-especie")
+def vacunacion_por_especie(propietario_id: Optional[int] = Query(default=None)):
+    prop_id = _sanitizar_id(propietario_id)
+    if prop_id is not None:
+        filas = ejecutar_consulta("""
+            SELECT 
+                especie,
+                SUM(CASE WHEN vacunado = 1 THEN 1 ELSE 0 END) AS vacunados,
+                SUM(CASE WHEN vacunado = 0 THEN 1 ELSE 0 END) AS no_vacunados
+            FROM mascotas
+            WHERE propietario_id = ?
+            GROUP BY especie
+        """, (prop_id,))
     else:
-        v = ejecutar_consulta("SELECT COUNT(*) AS c FROM mascotas WHERE vacunado = 1", una_fila=True)["c"]
-        nv = ejecutar_consulta("SELECT COUNT(*) AS c FROM mascotas WHERE vacunado = 0 OR vacunado IS NULL", una_fila=True)["c"]
+        filas = ejecutar_consulta("""
+            SELECT 
+                especie,
+                SUM(CASE WHEN vacunado = 1 THEN 1 ELSE 0 END) AS vacunados,
+                SUM(CASE WHEN vacunado = 0 THEN 1 ELSE 0 END) AS no_vacunados
+            FROM mascotas
+            GROUP BY especie
+        """)
+    return [{
+        "especie": f["especie"],
+        "vacunados": f["vacunados"],
+        "no_vacunados": f["no_vacunados"]
+    } for f in filas]
 
-    return {
-        "etiquetas": ["Vacunados", "Sin Vacunar"],
-        "valores": [v, nv]
-    }
-
-@app.post("/dashboard/reset-dataset")
-def reiniciar_dataset():
+@app.post("/dashboard/recargar-dataset")
+def recargar_dataset():
     regs = poblar_desde_dataset(reiniciar=True)
-    return {"mensaje": "Dataset reiniciado exitosamente", "registros_importados": regs}
+    return {
+        "mensaje": "Dataset oficial del censo cargado con éxito",
+        "registros_insertados": regs
+    }
 
 if __name__ == "__main__":
     import uvicorn

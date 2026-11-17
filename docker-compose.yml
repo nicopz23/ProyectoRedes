@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  # Base de Datos Distribuida PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: petmanager-db
+    environment:
+      POSTGRES_DB: petmanager_db
+      POSTGRES_USER: petuser
+      POSTGRES_PASSWORD: petpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init_postgres.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petuser -d petmanager_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Microservicio de Autenticación, Seguridad y Roles
+  service-auth:
+    build:
+      context: .
+      dockerfile: microservices/service-auth/Dockerfile
+    container_name: petmanager-service-auth
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petuser
+      DB_PASSWORD: petpass
+      DB_NAME: petmanager_db
+      PORT: 8001
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Microservicio de Mascotas, Propietarios y Analíticas
+  service-mascotas:
+    build:
+      context: .
+      dockerfile: microservices/service-mascotas/Dockerfile
+    container_name: petmanager-service-mascotas
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petuser
+      DB_PASSWORD: petpass
+      DB_NAME: petmanager_db
+      PORT: 8002
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Servidor Web Frontend y Reverse Proxy Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: microservices/frontend/Dockerfile
+    container_name: petmanager-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      service-auth:
+        condition: service_healthy
+      service-mascotas:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+
