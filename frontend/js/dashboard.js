@@ -24,6 +24,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnRestablecer) {
         btnRestablecer.addEventListener("click", restablecerDataset);
     }
+
+    const btnSpark = document.getElementById("btnEjecutarSpark");
+    if (btnSpark) {
+        btnSpark.addEventListener("click", ejecutarJobSpark);
+    }
 });
 
 function obtenerQueryPropietario() {
@@ -60,7 +65,8 @@ async function cargarTodosLosDatos() {
             cargarGraficoEspecies(query),
             cargarGraficoEdades(query),
             cargarGraficoVacunacion(query),
-            cargarGraficoRazas(query)
+            cargarGraficoRazas(query),
+            cargarAnaliticaSpark()
         ]);
     } catch (error) {
         console.error("Error al cargar datos del dashboard:", error);
@@ -242,5 +248,83 @@ async function restablecerDataset() {
         cargarTodosLosDatos();
     } catch (err) {
         alert("Error: " + err.message);
+    }
+}
+
+async function cargarAnaliticaSpark() {
+    try {
+        const res = await fetch("/analytics/resultados");
+        if (!res.ok) return;
+        const data = await res.json();
+        renderizarSparkUI(data);
+    } catch (err) {
+        console.warn("Módulo de analítica Spark/MapReduce no disponible aún:", err);
+    }
+}
+
+async function ejecutarJobSpark() {
+    const btn = document.getElementById("btnEjecutarSpark");
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ Procesando en Paralelo...";
+    }
+
+    try {
+        const res = await fetch("/analytics/ejecutar", { method: "POST" });
+        if (!res.ok) throw new Error("Error en la ejecución distribuida");
+        const data = await res.json();
+        renderizarSparkUI(data.detalles);
+
+        const alerta = document.getElementById("mensajeAlerta");
+        if (alerta) {
+            alerta.textContent = `Job paralelo finalizado en ${data.detalles.duracion_ms} ms (${data.detalles.registros_procesados} muestras particionadas).`;
+            alerta.className = "alerta alerta-exito";
+            alerta.style.display = "block";
+            setTimeout(() => alerta.style.display = "none", 4000);
+        }
+    } catch (err) {
+        alert("Fallo al ejecutar Job: " + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🔄 Disparar Job Paralelo";
+        }
+    }
+}
+
+function renderizarSparkUI(data) {
+    if (!data) return;
+
+    const elMotor = document.getElementById("sparkMotor");
+    const elTiempo = document.getElementById("sparkTiempo");
+    const elMuestras = document.getElementById("sparkMuestras");
+    const elWorkers = document.getElementById("sparkWorkers");
+    const tabla = document.getElementById("tablaSparkResultados");
+
+    if (elMotor) elMotor.textContent = data.motor || "MapReduce";
+    if (elTiempo) elTiempo.textContent = `${data.duracion_ms || 0} ms`;
+    if (elMuestras) elMuestras.textContent = data.registros_procesados || 0;
+    if (elWorkers) elWorkers.textContent = `${data.workers_activos || 4} Hilos / Particiones`;
+
+    if (tabla && data.resumen_por_especie) {
+        let html = "";
+        for (const [especie, m] of Object.entries(data.resumen_por_especie)) {
+            const riesgoBadge = m.indice_riesgo_sanitario > 4 
+                ? `<span style="color: #dc2626; font-weight: bold;">Alto (${m.indice_riesgo_sanitario})</span>`
+                : `<span style="color: #16a34a; font-weight: bold;">Bajo (${m.indice_riesgo_sanitario})</span>`;
+
+            html += `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px; font-weight: 600;">${especie}</td>
+                    <td style="padding: 10px;">${m.total_mascotas}</td>
+                    <td style="padding: 10px; color: #16a34a;">${m.vacunados}</td>
+                    <td style="padding: 10px; color: #dc2626;">${m.no_vacunados}</td>
+                    <td style="padding: 10px;">${m.tasa_vacunacion_pct}%</td>
+                    <td style="padding: 10px;">${m.edad_promedio} años</td>
+                    <td style="padding: 10px;">${riesgoBadge}</td>
+                </tr>
+            `;
+        }
+        tabla.innerHTML = html;
     }
 }

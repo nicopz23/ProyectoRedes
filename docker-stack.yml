@@ -1,6 +1,14 @@
 version: "3.8"
+
+# ==============================================================================
+# Docker Swarm Stack: Pet Manager - Censo y Gestión de Mascotas
+# Replicación, Alta Disponibilidad, Procesamiento Paralelo con Spark y Resiliencia
+# ==============================================================================
+
 services:
+  # ----------------------------------------------------------------------------
   # 1. Base de Datos Centralizada PostgreSQL
+  # ----------------------------------------------------------------------------
   db:
     image: postgres:15-alpine
     environment:
@@ -31,7 +39,9 @@ services:
           cpus: "0.20"
           memory: 128M
 
+  # ----------------------------------------------------------------------------
   # 2. Microservicio de Autenticación, Seguridad y Roles (Alta Disponibilidad)
+  # ----------------------------------------------------------------------------
   service-auth:
     image: petmanager-service-auth:latest
     environment:
@@ -70,7 +80,9 @@ services:
           cpus: "0.10"
           memory: 80M
 
+  # ----------------------------------------------------------------------------
   # 3. Microservicio de Mascotas, Propietarios y Analíticas (Alta Disponibilidad)
+  # ----------------------------------------------------------------------------
   service-mascotas:
     image: petmanager-service-mascotas:latest
     environment:
@@ -109,7 +121,89 @@ services:
           cpus: "0.10"
           memory: 80M
 
-  # 4. Frontend Web y Reverse Proxy Ingress (Alta Disponibilidad)
+  # ----------------------------------------------------------------------------
+  # 4. Microservicio de Procesamiento Paralelo Distribuido (Spark / MapReduce)
+  # ----------------------------------------------------------------------------
+  service-analytics:
+    image: petmanager-service-analytics:latest
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petuser
+      DB_PASSWORD: petpass
+      DB_NAME: petmanager_db
+      PORT: 8003
+      PARALLEL_WORKERS: 4
+      SPARK_MASTER_URL: spark://spark-master:7077
+    networks:
+      - frontend-net
+      - backend-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 600M
+        reservations:
+          cpus: "0.10"
+          memory: 150M
+
+  # ----------------------------------------------------------------------------
+  # 5. Apache Spark Master (Cluster de Cómputo Distribuido)
+  # ----------------------------------------------------------------------------
+  spark-master:
+    image: apache/spark:3.5.0
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: ingress
+      - target: 7077
+        published: 7077
+        protocol: tcp
+        mode: ingress
+    networks:
+      - backend-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 700M
+
+  # ----------------------------------------------------------------------------
+  # 6. Apache Spark Workers (2 Réplicas de Cómputo Paralelo en Swarm)
+  # ----------------------------------------------------------------------------
+  spark-worker:
+    image: apache/spark:3.5.0
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    networks:
+      - backend-net
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 800M
+
+  # ----------------------------------------------------------------------------
+  # 7. Frontend Web y Reverse Proxy Ingress (Alta Disponibilidad)
+  # ----------------------------------------------------------------------------
   frontend:
     image: petmanager-frontend:latest
     ports:
@@ -143,12 +237,16 @@ services:
           cpus: "0.05"
           memory: 30M
 
+# ==============================================================================
 # Volúmenes Persistentes
+# ==============================================================================
 volumes:
   postgres_data:
     driver: local
 
+# ==============================================================================
 # Redes Overlay (Aislamiento y Seguridad en Docker Swarm)
+# ==============================================================================
 networks:
   frontend-net:
     driver: overlay
@@ -156,4 +254,3 @@ networks:
   backend-net:
     driver: overlay
     attachable: true
-

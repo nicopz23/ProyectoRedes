@@ -102,3 +102,18 @@ Luego podrás ingresar a [http://petmanager.local/](http://petmanager.local/).
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 Todas las 15 pruebas unitarias y de integración se ejecutan y certifican el cumplimiento de los requerimientos.
+
+
+
+Para levantar el docker 
+# 1. Construir las imágenes para Swarm
+.\scripts\build-images.ps1
+
+# 2. Desplegar el stack en el cluster Swarm
+.\scripts\deploy-swarm.ps1
+
+# 3. Comprobar que los servicios y sus 2 réplicas están corriendo
+docker stack services petmanager
+
+# 4. Ejecutar la prueba de alta disponibilidad y auto-recuperación (ideal para la demo)
+.\scripts\test-resilience.ps1

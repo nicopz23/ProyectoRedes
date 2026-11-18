@@ -1,5 +1,5 @@
 """
-Pruebas de Microservicios Desacoplados (Service Auth y Service Mascotas)
+Pruebas de Microservicios Desacoplados (Service Auth, Service Mascotas y Service Analytics)
 """
 import unittest
 import os
@@ -20,11 +20,14 @@ class TestMicroserviciosDesacoplados(unittest.TestCase):
     def setUpClass(cls):
         app_auth = cargar_app_microservicio("microservices/service-auth/main.py")
         app_masc = cargar_app_microservicio("microservices/service-mascotas/main.py")
+        app_analytics = cargar_app_microservicio("microservices/service-analytics/main.py")
+        
         cls.client_auth = TestClient(app_auth)
         cls.client_mascotas = TestClient(app_masc)
+        cls.client_analytics = TestClient(app_analytics)
 
-    def test_health_checks_ambos_servicios(self):
-        """Verifica que ambos microservicios expongan sus healthchecks para Swarm."""
+    def test_health_checks_todos_los_servicios(self):
+        """Verifica que todos los microservicios expongan sus healthchecks para Swarm."""
         res_auth = self.client_auth.get("/health")
         self.assertEqual(res_auth.status_code, 200)
         self.assertEqual(res_auth.json()["service"], "service-auth")
@@ -32,6 +35,10 @@ class TestMicroserviciosDesacoplados(unittest.TestCase):
         res_masc = self.client_mascotas.get("/health")
         self.assertEqual(res_masc.status_code, 200)
         self.assertEqual(res_masc.json()["service"], "service-mascotas")
+
+        res_ana = self.client_analytics.get("/health")
+        self.assertEqual(res_ana.status_code, 200)
+        self.assertEqual(res_ana.json()["service"], "service-analytics")
 
     def test_service_auth_login_admin_y_comun(self):
         """Prueba autenticación en service-auth."""
@@ -53,6 +60,21 @@ class TestMicroserviciosDesacoplados(unittest.TestCase):
         self.assertEqual(res_dash.status_code, 200)
         self.assertGreater(res_dash.json()["total_mascotas"], 0)
 
+    def test_service_analytics_spark_mapreduce(self):
+        """Prueba ejecución distribuida y resultados del motor paralelo."""
+        res_status = self.client_analytics.get("/analytics/status")
+        self.assertEqual(res_status.status_code, 200)
+        self.assertIn("herramienta", res_status.json())
+
+        res_ejecutar = self.client_analytics.post("/analytics/ejecutar")
+        self.assertEqual(res_ejecutar.status_code, 200)
+        detalles = res_ejecutar.json()["detalles"]
+        self.assertGreater(detalles["registros_procesados"], 0)
+        self.assertIn("resumen_por_especie", detalles)
+
+        res_ultimos = self.client_analytics.get("/analytics/resultados")
+        self.assertEqual(res_ultimos.status_code, 200)
+        self.assertIn("resumen_por_especie", res_ultimos.json())
+
 if __name__ == "__main__":
     unittest.main()
-

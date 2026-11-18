@@ -73,6 +73,70 @@ services:
       retries: 3
     restart: unless-stopped
 
+  # Microservicio de Procesamiento Paralelo Distribuido (Apache Spark / MapReduce)
+  service-analytics:
+    build:
+      context: .
+      dockerfile: microservices/service-analytics/Dockerfile
+    container_name: petmanager-service-analytics
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: petuser
+      DB_PASSWORD: petpass
+      DB_NAME: petmanager_db
+      PORT: 8003
+      PARALLEL_WORKERS: 4
+      SPARK_MASTER_URL: spark://spark-master:7077
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Apache Spark Master (Nodo Maestro del Cluster de Cómputo)
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: petmanager-spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8080:8080" # Spark Web UI
+      - "7077:7077" # Spark Master URL
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Apache Spark Worker (Nodo de Procesamiento Paralelo)
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: petmanager-spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    networks:
+      - app-network
+    restart: unless-stopped
+
   # Servidor Web Frontend y Reverse Proxy Nginx
   frontend:
     build:
@@ -85,6 +149,8 @@ services:
       service-auth:
         condition: service_healthy
       service-mascotas:
+        condition: service_healthy
+      service-analytics:
         condition: service_healthy
     networks:
       - app-network
@@ -102,4 +168,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-
