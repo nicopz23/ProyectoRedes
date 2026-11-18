@@ -1,119 +1,203 @@
-# Pet Manager - Sistema de Censo y Gestión de Mascotas
+# Pet Manager - Arquitectura de Microservicios en Docker Swarm
 
-Proyecto de curso (1ª parte) para la asignatura **Redes e Infraestructura 2026-09**.
-
-El sistema da solución a la problemática de monitoreo poblacional, control de vacunación y registro de animales de compañía en un contexto municipal mediante la presentación de **dashboards analíticos interactivos** alimentados por un **dataset preexistente** de censo animal, con autenticación y control estricto de acceso mediante contraseñas y PIN, arquitectura desacoplada de servicios desplegada en **dos servidores** bajo un **nombre de dominio personalizado**.
+Sistema integral de censo poblacional, control de vacunación y analítica animal municipal desplegado sobre una **arquitectura basada en microservicios**, orquestada mediante **Docker Swarm**, con **procesamiento paralelo distribuido con Apache Spark**, **alta disponibilidad / autorecuperación (self-healing)** y **observabilidad en tiempo real con Prometheus y Grafana**.
 
 ---
 
-## 1. Características Principales
+## 🚀 Inicio Rápido (Un Solo Comando)
 
-* **Autenticación y Seguridad Estricta con Login:**
-  * **Página de inicio de sesión (`/login.html`):** Los usuarios y administradores deben autenticarse con sus credenciales correspondientes.
-  * **Cuenta de Administrador:** Usuario: `Admin`, Contraseña: PIN de acceso (valor predeterminado inicial: `231500`, modificable por el administrador desde su sesión). Tiene control total sobre todas las mascotas y propietarios del municipio.
-  * **Persona Común / Tutores:** Usuario: su correo electrónico registrado (ej: `carlos.gomez@email.com`), Contraseña: su contraseña (predeterminada en el dataset: `123456`). También incluye formulario de autoregistro para nuevos tutores.
-* **Privacidad Estricta de Mascotas y Dashboard:**
-  * La persona común **únicamente ve y gestiona sus propias mascotas** (CRUD exclusivo vinculado por clave foránea). Nunca ve las mascotas ni los datos privados de otros propietarios.
-  * En el **Dashboard**, la persona común visualiza las estadísticas y gráficos **exclusivamente de sus propias mascotas**. El administrador visualiza las estadísticas consolidadas de todo el municipio.
-* **Dataset Preexistente:** Carga automática inicial de `database/dataset_censo_mascotas.csv` con 50 registros de animales censados y hogares vinculados con contraseñas seguras.
-* **Pruebas Automatizadas:** 15 pruebas (unitarias y de integración) ejecutables con `unittest` o `pytest`.
-* **Despliegue en 2 Servidores:**
-  * `UbuntuServer-Front` (`192.168.56.10`): Servidor web Nginx con proxy inverso.
-  * `UbuntuServer-Back` (`192.168.56.20`): Servidor de aplicaciones FastAPI + SQLite.
-* **Acceso Directo o por Dominio:** Acceso directo vía `http://192.168.56.20:8000/` o por dominio `http://petmanager.local`.
+Para compilar, orquestar y levantar todo el sistema automáticamente en Windows, abre **PowerShell como Administrador** dentro de la carpeta del proyecto y ejecuta:
+
+```powershell
+.\scripts\iniciar.ps1
+```
+
+Este script automatizado se encarga de:
+1. Validar que Docker Desktop esté activo.
+2. Inicializar el cluster de Docker Swarm (`docker swarm init`).
+3. Construir y optimizar las imágenes de los microservicios.
+4. Desplegar el stack completo (`docker stack deploy -c docker-stack.yml petmanager`).
+5. Abrir automáticamente la aplicación en tu navegador web.
+
+Para detener y desmontar todo el cluster en cualquier momento:
+```powershell
+.\scripts\detener.ps1
+```
 
 ---
 
-## 2. Credenciales de Acceso
+## 🌐 URLs y Puntos de Acceso
 
-| Tipo de Perfil | Usuario / Correo | Contraseña / PIN | Alcance y Permisos |
+| Módulo / Servicio | URL en el Navegador | Descripción y Uso |
+| :--- | :--- | :--- |
+| **Portal Principal** | [http://localhost/](http://localhost/) | Portal de inicio del sistema Pet Manager |
+| **Inicio de Sesión** | [http://localhost/login.html](http://localhost/login.html) | Autenticación de tutores y administrador |
+| **Dashboard Analítico** | [http://localhost/dashboard.html](http://localhost/dashboard.html) | KPIs, gráficos interactivos y control de Spark |
+| **Catálogo de Mascotas** | [http://localhost/mascotas.html](http://localhost/mascotas.html) | Registro y gestión privada / global de animales |
+| **Directorio de Propietarios**| [http://localhost/propietarios.html](http://localhost/propietarios.html) | Perfil de tutor y directorio de tutores |
+| **Apache Spark Web UI** | [http://localhost:8080/](http://localhost:8080/) | Monitoreo del Master de Spark y Workers en tiempo real |
+| **Prometheus Metrics** | [http://localhost:9090/](http://localhost:9090/) | Servidor de métricas, scraping y consultas PromQL |
+| **Grafana Dashboards** | [http://localhost:3000/](http://localhost:3000/) | Dashboards de salud del Swarm, latencia y RPS *(User: `admin` / Pass: `admin`)* |
+
+---
+
+## 🔑 Credenciales de Acceso
+
+| Tipo de Perfil | Usuario / Correo | Contraseña / PIN | Permisos y Alcance |
 | :--- | :--- | :--- | :--- |
-| **Administrador** | `Admin` | `231500` *(o nuevo PIN configurado)* | Control global: ve y edita todas las mascotas y propietarios, dashboard municipal completo, cambio de PIN y reinicio de dataset. |
-| **Persona Común** | `carlos.gomez@email.com` *(o cualquier email del censo / nuevo registro)* | `123456` *(o la elegida al registrarse)* | Privado: solo ve y gestiona sus propias mascotas, dashboard con métricas de sus animales y edición de sus propios datos de contacto. |
+| **Administrador** | `Admin` | `231500` *(PIN por defecto)* | Control total del censo municipal, cambio de PIN de seguridad, analítica consolidada y reinicio de dataset. |
+| **Tutor / Persona Común**| `carlos.gomez@email.com` *(o cualquier email del censo)* | `123456` | Acceso privado exclusivo a sus propias mascotas registradas, métricas privadas y edición de perfil. |
 
 ---
 
-## 3. Estructura del Proyecto
+## 🏗️ Arquitectura del Sistema
 
 ```text
-c:\ProyectoRedes/
-|-- Vagrantfile                     # Despliegue de los 2 servidores (Front y Back)
-|-- requirements.txt                # Dependencias (FastAPI, uvicorn, pytest, httpx)
-|-- README.md                       # Documentación técnica del proyecto
-|-- ENTREGA_FASE1_FASE2.md          # Documento formal de las Fases de Definición y Diseño
-|-- peticiones.txt                  # Catálogo de peticiones cURL de prueba
-|-- backend/
-|   |-- main.py                     # Punto de entrada FastAPI y configuración de routers
-|   |-- database.py                 # Conexión SQLite, esquema, contraseñas y dataset
-|   |-- schemas.py                  # Modelos Pydantic para validación y auth
-|   `-- routes/
-|       |-- auth.py                 # Servicio de login y registro de usuarios
-|       |-- admin.py                # Servicio de seguridad y cambio de PIN
-|       |-- dashboard.py            # Analíticas globales y privadas por tutor
-|       |-- mascotas.py             # CRUD de mascotas y filtro por propietario
-|       `-- propietarios.py         # Directorio y perfil de tutores
-|-- frontend/
-|   |-- login.html                  # Pantalla de inicio de sesión y registro
-|   |-- index.html                  # Portal principal con control de sesión
-|   |-- dashboard.html              # Vista de dashboards analíticos (Chart.js)
-|   |-- mascotas.html               # Catálogo privado de mascotas
-|   |-- propietarios.html           # Directorio / Mi Perfil de tutor
-|   |-- css/
-|   |   `-- style.css               # Estilos y diseño responsivo
-|   `-- js/
-|       |-- roles.js                # Control de sesión, PIN y navegación
-|       |-- dashboard.js            # Lógica y renderizado de gráficos filtrados
-|       |-- mascotas.js             # Lógica de mascotas privadas y admin
-|       `-- propietarios.js         # Lógica de perfil propio y directorio
+                                [ CLIENTE / NAVEGADOR ]
+                                           │
+                        (Puerto 80: Ingress Routing Mesh)
+                                           ▼
+                       ┌──────────────────────────────────────┐
+                       │    FRONTEND PROXY INGRESS (Nginx)    │
+                       │             (2 Réplicas)             │
+                       └──────────────────┬───────────────────┘
+                                          │
+                    ┌─────────────────────┼─────────────────────┐
+                    ▼                     ▼                     ▼
+          ┌───────────────────┐ ┌───────────────────┐ ┌───────────────────┐
+          │   SERVICE-AUTH    │ │ SERVICE-MASCOTAS  │ │ SERVICE-ANALYTICS │
+          │   (2 Réplicas)    │ │   (2 Réplicas)    │ │   (1 Réplica)     │
+          │ Puerto int: 8001  │ │ Puerto int: 8002  │ │ Puerto int: 8003  │
+          └─────────┬─────────┘ └─────────┬─────────┘ └─────────┬─────────┘
+                    │                     │                     │
+                    └──────────────┬──────┴─────────────────────┤
+                                   ▼                            ▼
+                        ┌─────────────────────┐      ┌─────────────────────┐
+                        │   POSTGRESQL DB     │      │ APACHE SPARK CLUSTER│
+                        │    (1 Réplica)      │      │  Master + 2 Workers │
+                        │  Volumen Persistente│      │ (Procesamiento Par.)│
+                        └─────────────────────┘      └─────────────────────┘
+                                   ▲
+                                   │ (Scraping de métricas cada 5s)
+                    ┌──────────────┴──────────────┐
+                    │      PILA DE MONITOREO      │
+                    │  Prometheus (Puerto 9090)   │
+                    │   Grafana  (Puerto 3000)    │
+                    └─────────────────────────────┘
+```
+
+---
+
+## 📁 Estructura del Repositorio
+
+```text
+c:\Proyecto\ProyectoRedes/
+|-- docker-stack.yml                    # Definición del Stack de producción para Docker Swarm
+|-- docker-compose.yml                  # Definición multi-contenedor para desarrollo local
+|-- requirements.txt                    # Dependencias generales del proyecto
+|-- README.md                           # Documentación completa y guía de ejecución
+|-- microservices/                      # Código fuente desacoplado por servicios
+|   |-- common/                         # Módulos transversales compartidos
+|   |   |-- database.py                 # Conexión dual (PostgreSQL en Swarm / SQLite local)
+|   |   `-- schemas.py                  # Modelos Pydantic de validación
+|   |-- service-auth/                   # Microservicio de Autenticación, Roles y PIN
+|   |   |-- main.py                     # API REST FastAPI (puerto 8001)
+|   |   |-- requirements.txt            # Dependencias específicas
+|   |   `-- Dockerfile                  # Contenedor optimizado python:3.11-slim
+|   |-- service-mascotas/               # Microservicio de Animales, Tutores y KPIs
+|   |   |-- main.py                     # API REST FastAPI (puerto 8002)
+|   |   |-- requirements.txt            # Dependencias específicas
+|   |   `-- Dockerfile                  # Contenedor optimizado python:3.11-slim
+|   |-- service-analytics/              # Microservicio de Procesamiento Paralelo
+|   |   |-- main.py                     # API REST FastAPI (puerto 8003)
+|   |   |-- analytics_engine.py         # Motor MapReduce y conector a Apache Spark
+|   |   |-- requirements.txt            # Dependencias con PySpark
+|   |   `-- Dockerfile                  # Contenedor con OpenJDK y Python
+|   `-- frontend/                       # Microservicio Web y Reverse Proxy Ingress
+|       |-- nginx.conf                  # Proxy inverso con resolución dinámica de DNS (127.0.0.11)
+|       `-- Dockerfile                  # Contenedor nginx:alpine
+|-- monitoring/                         # Pila de Observabilidad y Métricas
+|   |-- prometheus/
+|   |   `-- prometheus.yml              # Configuración de scraping automático cada 5s
+|   `-- grafana/
+|       |-- provisioning/               # Carga automática de datasources y dashboards
+|       |   |-- datasources/datasources.yml
+|       |   `-- dashboards/dashboards.yml
+|       `-- dashboards/
+|           `-- petmanager_overview.json # Dashboard integral de tráfico, latencia y salud
 |-- database/
-|   |-- dataset_censo_mascotas.csv  # Dataset preexistente con contraseñas
-|   |-- schema.sql                  # Estructura DDL con claves foráneas en cascada
-|   `-- mascotas.db                 # Base de datos SQLite
-|-- tests/
-|   |-- test_unit.py                # Pruebas unitarias de esquemas y analíticas
-|   `-- test_integration.py         # Pruebas de integración de auth, dashboard y CRUD
-`-- ansible/
-    |-- inventory.ini               # Inventario de los dos servidores
-    `-- site.yml                    # Playbook de aprovisionamiento
+|   |-- init_postgres.sql               # DDL e índices para PostgreSQL en Swarm
+|   |-- dataset_censo_mascotas.csv      # Dataset oficial inicial de 50 registros
+|   `-- schema.sql                      # Esquema SQLite
+|-- scripts/                            # Scripts de automatización en PowerShell (Windows)
+|   |-- iniciar.ps1                     # Script maestro de compilación y despliegue Swarm
+|   |-- detener.ps1                     # Detiene y limpia el stack del Swarm
+|   |-- build-images.ps1                # Compila y etiqueta las 4 imágenes Docker
+|   |-- deploy-swarm.ps1                # Despliega el stack en Swarm
+|   `-- test-resilience.ps1             # Demostración en vivo de tolerancia a fallos
+`-- tests/                              # Suite de 19 pruebas automatizadas
 ```
 
 ---
 
-## 4. Instrucciones de Acceso y Ejecución
+## ⚡ Procesamiento Paralelo Distribuido (Apache Spark & MapReduce)
 
-### Opción A: Acceso Directo por IP (Recomendado inmediato)
+El sistema incorpora un motor especializado de cómputo distribuido en [`microservices/service-analytics/`](microservices/service-analytics/):
+1. **Cluster Apache Spark:** Compuesto por un nodo Maestro (`spark-master`) y **2 nodos Trabajadores (`spark-worker`)** configurados en el cluster Swarm.
+2. **Algoritmo MapReduce Paralelo:**
+   * **Fase MAP:** Distribuye las particiones de datos entre hilos de ejecución paralelos para clasificar a cada animal según especie, edad y estado inmunológico.
+   * **Fase SHUFFLE & SORT:** Agrupa las claves concurrentemente por categoría epidemiológica.
+   * **Fase REDUCE:** Agrega los totales, calcula las tasas de vacunación y produce el **Índice de Riesgo Sanitario Municipal**.
+3. **Ejecución Interactiva:** Desde [http://localhost/dashboard.html](http://localhost/dashboard.html), al hacer clic en **"🔄 Disparar Job Paralelo"**, se ejecuta el cálculo distribuido en milisegundos y los resultados se reflejan en tiempo real.
 
-* **Página de Inicio / Login:** [http://192.168.56.20:8000/](http://192.168.56.20:8000/) o [http://192.168.56.20:8000/login.html](http://192.168.56.20:8000/login.html)
-* **Documentación interactiva de la API:** [http://192.168.56.20:8000/docs](http://192.168.56.20:8000/docs)
+---
 
-### Opción B: Acceso con Nombre de Dominio (`petmanager.local`)
+## 🛡️ Mecanismos de Alta Disponibilidad y Resiliencia (Self-Healing)
 
-Para que Windows resuelva el nombre de dominio local sin un servidor DNS público, abre **PowerShell como Administrador** y ejecuta:
+1. **Replicación Activa:** Los servicios críticos (`frontend`, `service-auth`, `service-mascotas`, `spark-worker`) operan con **2 réplicas balanceadas**.
+2. **Routing Mesh:** Docker Swarm balancea las conexiones entrantes entre los contenedores vivos de forma transparente.
+3. **Demostración en Vivo de Auto-Recuperación:**
+   Durante la exposición, ejecuta en PowerShell:
+   ```powershell
+   .\scripts\test-resilience.ps1
+   ```
+   El script:
+   * Identifica una réplica activa de la API.
+   * La termina forzosamente (`docker kill`).
+   * Realiza una petición web instantánea demostrando **cero tiempo de inactividad** (la petición la absorbe la segunda réplica).
+   * Muestra en pantalla cómo Docker Swarm detecta el fallo y levanta un contenedor de reemplazo en cuestión de segundos (**Self-Healing**).
+
+---
+
+## 📊 Monitoreo y Observabilidad en Tiempo Real
+
+* **Prometheus ([http://localhost:9090/](http://localhost:9090/)):** Recolecta métricas cada 5 segundos mediante la librería `prometheus-fastapi-instrumentator` expuesta en `/metrics` en cada microservicio.
+* **Grafana ([http://localhost:3000/](http://localhost:3000/)):** Dashboard preconfigurado llamado **Pet Manager - Docker Swarm Overview** que muestra:
+  * Semáforo de salud UP/DOWN de cada microservicio.
+  * Tasa de Peticiones por Segundo (RPS) en vivo.
+  * Latencia media de respuesta (segundos).
+  * Distribución de códigos HTTP (200 OK vs 4xx vs 5xx).
+
+---
+
+## 🎤 Guion Sugerido para la Presentación Grupal (15 Minutos)
+
+| Tiempo | Sección | Qué Mostrar y Decir |
+| :--- | :--- | :--- |
+| **00:00 - 02:00** | **1. Resumen y Objetivo** | Explicar el problema del censo de mascotas municipal, privacidad de datos por tutor y transición de arquitectura monolítica a microservicios en Docker Swarm. |
+| **02:00 - 05:00** | **2. Arquitectura y Docker Swarm** | Mostrar el diagrama de arquitectura, explicar el desacoplamiento en 4 microservicios (`frontend`, `service-auth`, `service-mascotas`, `service-analytics`) y el uso de redes Overlay para aislar PostgreSQL. Ejecutar `docker stack services petmanager` para mostrar las réplicas 2/2. |
+| **05:00 - 08:00** | **3. Procesamiento Paralelo (Spark)** | Abrir la consola de Spark en [http://localhost:8080/](http://localhost:8080/) mostrando los 2 workers activos. Ir al Dashboard [http://localhost/dashboard.html](http://localhost/dashboard.html) y presionar **"🔄 Disparar Job Paralelo"**, explicando las fases Map, Shuffle y Reduce que calculan el riesgo sanitario. |
+| **08:00 - 11:00** | **4. Monitoreo (Prometheus + Grafana)**| Abrir Grafana [http://localhost:3000/](http://localhost:3000/). Mostrar el dashboard preconfigurado con las métricas en vivo de RPS, latencia y disponibilidad de los contenedores. |
+| **11:00 - 13:30** | **5. Demostración de Resiliencia en Vivo** | Ejecutar en PowerShell: `.\scripts\test-resilience.ps1`. Mostrar cómo se destruye un contenedor con `docker kill`, el servicio sigue respondiendo sin caída gracias al balanceo de Swarm, y el cluster crea automáticamente una nueva réplica (Self-Healing). |
+| **13:30 - 15:00** | **6. Retos Enfrentados y Conclusiones** | Mencionar retos superados: resolución dinámica de DNS en Nginx con `127.0.0.11`, migración de SQLite a PostgreSQL sin bloqueos por concurrencia multi-réplica, e integración de Spark en contenedores. |
+
+---
+
+## 🧪 Pruebas Automatizadas
+
+Para validar toda la suite de 19 pruebas (unitarias, integración y microservicios):
+
 ```powershell
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.56.20 petmanager.local"
-```
-Luego podrás ingresar a [http://petmanager.local/](http://petmanager.local/).
-
----
-
-## 5. Ejecución de Pruebas Automatizadas
-
-```bash
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
-Todas las 15 pruebas unitarias y de integración se ejecutan y certifican el cumplimiento de los requerimientos.
-
-
-
-Para levantar el docker 
-# 1. Construir las imágenes para Swarm
-.\scripts\build-images.ps1
-
-# 2. Desplegar el stack en el cluster Swarm
-.\scripts\deploy-swarm.ps1
-
-# 3. Comprobar que los servicios y sus 2 réplicas están corriendo
-docker stack services petmanager
-
-# 4. Ejecutar la prueba de alta disponibilidad y auto-recuperación (ideal para la demo)
-.\scripts\test-resilience.ps1
+*(Resultado: 19 pruebas ejecutadas y aprobadas al 100%).*

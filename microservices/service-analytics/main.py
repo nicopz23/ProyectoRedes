@@ -54,6 +54,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Instrumentación con Prometheus para observabilidad
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+    Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+except Exception:
+    from fastapi.responses import PlainTextResponse
+    @app.get("/metrics")
+    def fallback_metrics():
+        return PlainTextResponse("# HELP petmanager_service_up Status\n# TYPE petmanager_service_up gauge\npetmanager_service_up{service=\"service-analytics\"} 1\n")
+
 @app.get("/health")
 def health_check():
     return {

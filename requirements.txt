@@ -4,3 +4,4 @@ httpx
 pytest
 psycopg2-binary>=2.9.6
 pydantic>=2.0.0
+prometheus-fastapi-instrumentator>=6.1.0

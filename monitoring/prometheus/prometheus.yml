@@ -1,0 +1,32 @@
+# ==============================================================================
+# Prometheus Configuration - Pet Manager Swarm Monitoring
+# ==============================================================================
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  scrape_timeout: 4s
+
+scrape_configs:
+  # 1. Prometheus Auto-monitoreo
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # 2. Microservicio de Autenticación y Seguridad
+  - job_name: "service-auth"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["service-auth:8001"]
+
+  # 3. Microservicio de Mascotas, Propietarios y Dashboard
+  - job_name: "service-mascotas"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["service-mascotas:8002"]
+
+  # 4. Microservicio de Procesamiento Paralelo (Spark / MapReduce)
+  - job_name: "service-analytics"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["service-analytics:8003"]
+
