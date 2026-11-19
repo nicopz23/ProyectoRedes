@@ -178,19 +178,6 @@ El sistema incorpora un motor especializado de cómputo distribuido en [`microse
 
 ---
 
-## 🎤 Guion Sugerido para la Presentación Grupal (15 Minutos)
-
-| Tiempo | Sección | Qué Mostrar y Decir |
-| :--- | :--- | :--- |
-| **00:00 - 02:00** | **1. Resumen y Objetivo** | Explicar el problema del censo de mascotas municipal, privacidad de datos por tutor y transición de arquitectura monolítica a microservicios en Docker Swarm. |
-| **02:00 - 05:00** | **2. Arquitectura y Docker Swarm** | Mostrar el diagrama de arquitectura, explicar el desacoplamiento en 4 microservicios (`frontend`, `service-auth`, `service-mascotas`, `service-analytics`) y el uso de redes Overlay para aislar PostgreSQL. Ejecutar `docker stack services petmanager` para mostrar las réplicas 2/2. |
-| **05:00 - 08:00** | **3. Procesamiento Paralelo (Spark)** | Abrir la consola de Spark en [http://localhost:8080/](http://localhost:8080/) mostrando los 2 workers activos. Ir al Dashboard [http://localhost/dashboard.html](http://localhost/dashboard.html) y presionar **"🔄 Disparar Job Paralelo"**, explicando las fases Map, Shuffle y Reduce que calculan el riesgo sanitario. |
-| **08:00 - 11:00** | **4. Monitoreo (Prometheus + Grafana)**| Abrir Grafana [http://localhost:3000/](http://localhost:3000/). Mostrar el dashboard preconfigurado con las métricas en vivo de RPS, latencia y disponibilidad de los contenedores. |
-| **11:00 - 13:30** | **5. Demostración de Resiliencia en Vivo** | Ejecutar en PowerShell: `.\scripts\test-resilience.ps1`. Mostrar cómo se destruye un contenedor con `docker kill`, el servicio sigue respondiendo sin caída gracias al balanceo de Swarm, y el cluster crea automáticamente una nueva réplica (Self-Healing). |
-| **13:30 - 15:00** | **6. Retos Enfrentados y Conclusiones** | Mencionar retos superados: resolución dinámica de DNS en Nginx con `127.0.0.11`, migración de SQLite a PostgreSQL sin bloqueos por concurrencia multi-réplica, e integración de Spark en contenedores. |
-
----
-
 ## 🧪 Pruebas Automatizadas
 
 Para validar toda la suite de 19 pruebas (unitarias, integración y microservicios):
