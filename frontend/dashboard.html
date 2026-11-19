@@ -23,9 +23,11 @@
                 <a href="/dashboard.html" class="active">Dashboard</a>
                 <a href="/mascotas.html">Mascotas</a>
                 <a href="/propietarios.html">Propietarios</a>
-                <a href="/docs" target="_blank">API Docs</a>
-                <button id="btnCambiarPin" class="btn btn-outline" style="display: none; font-size: 0.82rem;">🔑 Cambiar PIN</button>
-                <button id="btnCerrarSesion" class="btn btn-outline" style="font-size: 0.82rem;">🚪 Cerrar Sesión</button>
+                <!-- <a href="/docs" target="_blank">API Docs</a> -->
+                <button id="btnCambiarPin" class="btn btn-outline" style="display: none; font-size: 0.82rem;">🔑 Cambiar
+                    PIN</button>
+                <button id="btnCerrarSesion" class="btn btn-outline" style="font-size: 0.82rem;">🚪 Cerrar
+                    Sesión</button>
             </nav>
         </div>
     </header>
@@ -39,7 +41,8 @@
             </div>
             <div>
                 <button id="btnRefrescar" class="btn btn-primary">🔄 Actualizar</button>
-                <button id="btnRestablecerDataset" class="btn btn-secondary solo-admin" style="display: none;" title="Solo Administrador">📥 Restablecer Datos</button>
+                <button id="btnRestablecerDataset" class="btn btn-secondary solo-admin" style="display: none;"
+                    title="Solo Administrador">📥 Restablecer Datos</button>
             </div>
         </div>
 
@@ -101,24 +104,29 @@
         </section>
 
         <!-- Sección de Procesamiento Paralelo y Distribuido (Apache Spark & MapReduce) -->
-        <section class="admin-panel" style="margin-top: 2rem; border-left: 5px solid #28a745;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <section class="admin-panel" style="margin-top: 2rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h2 style="margin: 0; color: #1e3a8a;">⚡ Procesamiento Paralelo Distribuido (Apache Spark & MapReduce)</h2>
+                    <h2 style="margin: 0; color: #1e3a8a;">⚡ Procesamiento Paralelo Distribuido (Apache Spark &
+                        MapReduce)</h2>
                     <p style="margin: 0.3rem 0 0 0; color: #64748b; font-size: 0.95rem;">
                         Motor de agregación concurrente sobre particiones de datos del censo municipal animal.
                     </p>
                 </div>
-                <button id="btnEjecutarSpark" class="btn btn-primary" style="background-color: #2563eb; font-weight: 600;">
+                <button id="btnEjecutarSpark" class="btn btn-primary"
+                    style="background-color: #2563eb; font-weight: 600;">
                     🔄 Disparar Job Paralelo
                 </button>
             </div>
 
             <!-- KPIs de Cómputo Paralelo -->
-            <div class="kpi-grid" style="margin-top: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="kpi-grid"
+                style="margin-top: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                 <div class="kpi-card">
                     <span class="kpi-label">Motor de Cómputo</span>
-                    <span class="kpi-value" id="sparkMotor" style="font-size: 1.1rem; color: #1e3a8a;">Cargando...</span>
+                    <span class="kpi-value" id="sparkMotor"
+                        style="font-size: 1.1rem; color: #1e3a8a;">Cargando...</span>
                     <span class="kpi-subtext">Tecnología de ejecución</span>
                 </div>
                 <div class="kpi-card kpi-success">
@@ -140,7 +148,8 @@
 
             <!-- Tabla de Resultados MapReduce / Spark -->
             <div style="margin-top: 1.5rem; overflow-x: auto;">
-                <h3 style="margin-bottom: 0.8rem; font-size: 1.05rem;">Métricas Epidemiológicas por Especie (Cálculo Distribuido)</h3>
+                <h3 style="margin-bottom: 0.8rem; font-size: 1.05rem;">Métricas Epidemiológicas por Especie (Cálculo
+                    Distribuido)</h3>
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem;">
                     <thead>
                         <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
@@ -154,7 +163,10 @@
                         </tr>
                     </thead>
                     <tbody id="tablaSparkResultados">
-                        <tr><td colspan="7" style="padding: 15px; text-align: center; color: #94a3b8;">Cargando analítica distribuida...</td></tr>
+                        <tr>
+                            <td colspan="7" style="padding: 15px; text-align: center; color: #94a3b8;">Cargando
+                                analítica distribuida...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
