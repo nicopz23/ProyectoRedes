@@ -130,11 +130,9 @@ c:\Proyecto\ProyectoRedes/
 |   |-- dataset_censo_mascotas.csv      # Dataset oficial inicial de 50 registros
 |   `-- schema.sql                      # Esquema SQLite
 |-- scripts/                            # Scripts de automatización en PowerShell (Windows)
-|   |-- iniciar.ps1                     # Script maestro de compilación y despliegue Swarm
+|   |-- iniciar.ps1                     # Script maestro: compila y despliega todo en 1 solo paso
 |   |-- detener.ps1                     # Detiene y limpia el stack del Swarm
-|   |-- build-images.ps1                # Compila y etiqueta las 4 imágenes Docker
-|   |-- deploy-swarm.ps1                # Despliega el stack en Swarm
-|   `-- test-resilience.ps1             # Demostración en vivo de tolerancia a fallos
+|   `-- test-resilience.ps1             # Demostración en vivo de tolerancia a fallos (demo)
 `-- tests/                              # Suite de 19 pruebas automatizadas
 ```
 
