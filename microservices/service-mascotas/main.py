@@ -269,8 +269,7 @@ def resumen_dashboard(propietario_id: Optional[int] = Query(default=None)):
 
 @app.get("/dashboard/por-especie")
 def distribucion_por_especie(propietario_id: Optional[int] = Query(default=None)):
-    if propietario_id is not None:
-        prop_id = _sanitizar_id(propietario_id)
+    prop_id = _sanitizar_id(propietario_id)
     if prop_id is not None:
         filas = ejecutar_consulta("""
             SELECT especie, COUNT(*) AS cantidad 

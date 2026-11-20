@@ -60,6 +60,14 @@ class TestMicroserviciosDesacoplados(unittest.TestCase):
         self.assertEqual(res_dash.status_code, 200)
         self.assertGreater(res_dash.json()["total_mascotas"], 0)
 
+        # Verificar analítica de especies tanto global (Admin) como filtrada (Tutor)
+        res_esp_global = self.client_mascotas.get("/dashboard/por-especie")
+        self.assertEqual(res_esp_global.status_code, 200)
+        self.assertGreater(len(res_esp_global.json()), 0)
+
+        res_esp_tutor = self.client_mascotas.get("/dashboard/por-especie?propietario_id=1")
+        self.assertEqual(res_esp_tutor.status_code, 200)
+
     def test_service_analytics_spark_mapreduce(self):
         """Prueba ejecución distribuida y resultados del motor paralelo."""
         res_status = self.client_analytics.get("/analytics/status")
